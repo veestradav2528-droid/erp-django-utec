@@ -1,20 +1,15 @@
-# productos/urls.py
-"""URLs de la app productos — W01 (mínimo funcional)."""
+# proveedoress/urls.py
+"""URLs de la app proveedores — W02."""
 from django.urls import path
-from django.http import HttpResponse
+from . import views
 
-app_name = 'productos'
-
-
-def bienvenida_proveedores(request):
-    """Vista temporal de bienvenida para la app proveedores."""
-    return HttpResponse(
-        "<h2>📦 Módulo proovedores</h2>"
-        "<p>En construcción — Espiral 2 (W04)</p>",
-        content_type='text/html; charset=utf-8'
-    )
-
+app_name = 'proveedores'
 
 urlpatterns = [
-    path('', bienvenida_proveedores, name='inicio'),
+    path('', views.index, name='inicio'),
+    # Espiral 2 W05:
+    # path('lista/',          views.proveedoresListView.as_view(),   name='lista'),
+    # path('nuevo/',          views.proveedoresCreateView.as_view(), name='crear'),
+    # path('<int:pk>/',       views.proveedoresDetailView.as_view(), name='detalle'),
+    # path('<int:pk>/editar/',views.proveedoresUpdateView.as_view(), name='editar'),
 ]
