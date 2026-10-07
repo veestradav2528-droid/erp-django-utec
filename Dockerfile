@@ -33,4 +33,7 @@ EXPOSE $PORT
 
 # Comando por defecto: iniciar Gunicorn
 CMD sh -c "python manage.py migrate --no-input && (python manage.py createsuperuser --no-input || true) && gunicorn core.wsgi --bind 0.0.0.0:${PORT} --workers 2 --timeout 120 --log-file -"
-                
+    --bind 0.0.0.0:$PORT \
+    --workers 2 \
+    --timeout 120 \
+    --log-file -
