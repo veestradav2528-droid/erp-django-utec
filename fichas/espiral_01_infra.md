@@ -9,7 +9,7 @@
 | **Semanas** | W01 – W03 |
 | **Fecha de inicio** | ___/___/_____ |
 | **Fecha de cierre** | ___/___/_____ |
-| **Responsable** | [Nombre del estudiante] |
+| **Responsable** | Victor Emanuel Estrada Villagomez |
 | **Asesor** | MC. Román Fernando López González |
 
 ---
@@ -48,7 +48,11 @@ posterior tenga una URL pública verificable desde el inicio del proyecto.
 - [ ] Captura de pantalla: `evidencias/espiral_01/render_url.png`
 - [ ] Captura de pantalla: `evidencias/espiral_01/manage_check.png`
 - [ ] Resultado de tests: `Ran 33 tests in X.XXXs — OK`
-- [ ] Commit de cierre: 'fcd61e9 (HEAD -> main, origin/main) Sprint 0 W02 CIERRE: MVT completo + Fable5 + WhiteNoise + 23 tests OK'
+- [ ] Commit de cierre:
+```
+[pegar aquí el resultado de: git log --oneline -5]
+```
+
 ---
 
 ## 4. Criterios de aceptación verificados

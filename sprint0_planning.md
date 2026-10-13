@@ -22,7 +22,7 @@
 
 ## Hito M1 — ALCANZADO ✅
 
-- URL pública: https://erp-django-utec-wy0k.onrender.com
+- URL pública:  https://erp-django-utec-wy0k.onrender.com
 - Tests: Ran 35 tests → OK
 - Commits: 12 en rama main
 - Fecha: 07/10/2026
