@@ -1,12 +1,15 @@
 # productos/models.py
-"""Modelos de la app productos — Espiral 2 W05.
+"""Modelos de la app productos — Espiral 2 W05/W06.
 
-Orden de implementación:
+Modelos:
   1. Categoria  (sin FK)
-  2. Producto   (FK → Categoria, FK → Proveedor)  ← Parte 3
+  2. Producto   (FK → Categoria, FK → Proveedor)
+
+W06: Producto.clean() agrega validaciones de negocio (precio y stock >= 0).
 """
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 
@@ -35,7 +38,7 @@ class Categoria(models.Model):
 
     def __str__(self) -> str:
         return self.nombre
-    # Agregar después de la clase Categoria en productos/models.py
+
 
 class Producto(models.Model):
     """Artículo del inventario del ERP.
@@ -88,3 +91,23 @@ class Producto(models.Model):
 
     def __str__(self) -> str:
         return f"{self.nombre} (${self.precio:.2f})"
+
+    def clean(self) -> None:
+        """Validaciones de negocio para Producto (las dispara full_clean()).
+
+        No se ejecutan con save() directo.
+
+        Raises:
+            ValidationError: si precio < 0 o stock < 0.
+        """
+        errors = {}
+        if self.precio is not None and self.precio < 0:
+            errors['precio'] = (
+                f'El precio no puede ser negativo. Valor recibido: {self.precio}'
+            )
+        if self.stock is not None and self.stock < 0:
+            errors['stock'] = (
+                f'El stock no puede ser negativo. Valor recibido: {self.stock}'
+            )
+        if errors:
+            raise ValidationError(errors)
