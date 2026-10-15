@@ -17,7 +17,6 @@ INSTALLED_APPS = [
     # Jazzmin PRIMERO — antes de django.contrib.admin
     'jazzmin',                          # ← nueva línea, primera posición
     
-    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -192,7 +191,6 @@ JAZZMIN_UI_TWEAKS = {
     'sidebar_nav_legacy_style': False,
     'sidebar_nav_flat_style':   False,
     'theme':                    'default',
-    'dark_mode_theme':          None,
     'button_classes': {
         'primary':   'btn-primary',
         'secondary': 'btn-secondary',
