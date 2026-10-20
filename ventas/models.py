@@ -14,6 +14,8 @@ Decisiones de diseño aplicadas:
 
 W06: clean() en DetalleVenta y Pedido + validator en Pedido.total_pagado.
 """
+
+from django.core.exceptions import ValidationError
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
@@ -174,12 +176,17 @@ class Pedido(models.Model):
     fecha_entrega = models.DateField(
         null=True, blank=True, verbose_name='Fecha de entrega'
     )
+    # En la clase Pedido, reemplazar el campo total_pagado:
+
     total_pagado  = models.DecimalField(
-        max_digits=10, decimal_places=2,
-        null=True, blank=True,
-        validators=[MinValueValidator(Decimal('0.00'))],   # W06 Parte 2
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(Decimal('0.00'))],  # ← agregar
         verbose_name='Total pagado'
     )
+
 
     class Meta:
         verbose_name        = 'Pedido'

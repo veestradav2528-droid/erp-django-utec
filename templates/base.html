@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="light">
+<html lang="es" data-theme="halloween">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#0A2342">
-    <title>{% block title %}ERP Django{% endblock %} · UTEC Celaya</title>
+    <meta name="theme-color" content="#1A1A1A">
+    <title>{% block title %}Panel{% endblock %} · Mi ERP</title>
 
     <!-- Google Fonts: Playfair Display + Inter + JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -56,6 +56,44 @@
             --shadow-sm  : 0 1px 4px rgba(0,0,0,.3);
             --shadow-md  : 0 4px 16px rgba(0,0,0,.4);
         }
+        /* TOKENS HALLOWEEN */
+        [data-theme="halloween"] {
+            --clr-navy   : #1A1A1A;
+            --clr-royal  : #5B2A86;
+            --clr-sky    : #FF9A3C;
+            --clr-ice    : #241533;
+            --clr-gold   : #FF7518;
+            --clr-amber  : #FFA64D;
+            --clr-cream  : #2B1A10;
+            --clr-bg     : #0F0A14;
+            --clr-surface: #1B1226;
+            --clr-text   : #F3E9DC;
+            --clr-muted  : #B7A4C9;
+            --clr-border : #3A2552;
+            --clr-danger : #FF4D4D;
+            --clr-ok     : #9ACD32;
+            --shadow-sm  : 0 1px 4px rgba(0,0,0,.4);
+            --shadow-md  : 0 4px 16px rgba(255,117,24,.18);
+        }
+        /* TOKENS BOSQUE */
+        [data-theme="bosque"] {
+            --clr-navy   : #14532D;
+            --clr-royal  : #1E7B45;
+            --clr-sky    : #3FA66B;
+            --clr-ice    : #E6F4EA;
+            --clr-gold   : #C9A227;
+            --clr-amber  : #E0B93A;
+            --clr-cream  : #FBF6DF;
+            --clr-bg     : #F3F8F4;
+            --clr-surface: #FFFFFF;
+            --clr-text   : #12261A;
+            --clr-muted  : #5B7266;
+            --clr-border : #C5DECB;
+            --clr-danger : #C0392B;
+            --clr-ok     : #1A7A4A;
+            --shadow-sm  : 0 1px 4px rgba(20,83,45,.10);
+            --shadow-md  : 0 4px 16px rgba(20,83,45,.16);
+        }
         /* BASE */
         *, *::before, *::after { box-sizing: border-box; }
         body {
@@ -82,7 +120,6 @@
             color: var(--clr-gold) !important;
             text-decoration: none; letter-spacing: .04em;
         }
-        .erp-brand span { color: rgba(255,255,255,.7); font-weight: 300; font-size: .85em; }
         .erp-nav-links { display: flex; align-items: center; gap: .25rem; flex-wrap: wrap; }
         .erp-nav-link {
             color: rgba(255,255,255,.82) !important;
@@ -109,7 +146,7 @@
             border: 1px solid var(--clr-border);
             border-radius: 12px; box-shadow: var(--shadow-sm);
             padding: 1.5rem; margin-bottom: 1.5rem;
-            transition: box-shadow .2s;
+            transition: box-shadow .2s, border-color .2s;
         }
         .erp-card:hover { box-shadow: var(--shadow-md); }
         .erp-card-header {
@@ -226,7 +263,8 @@
             font-family: 'Playfair Display',serif;
             font-size: 1.6rem; color: var(--clr-navy); margin: 0;
         }
-        [data-theme="dark"] .erp-page-title h2 { color: var(--clr-sky); }
+        [data-theme="dark"] .erp-page-title h2,
+        [data-theme="halloween"] .erp-page-title h2 { color: var(--clr-sky); }
         /* CÓDIGO */
         code, .mono {
             font-family: 'JetBrains Mono',Consolas,monospace;
@@ -237,11 +275,29 @@
         [data-theme="dark"] .mono {
             color: var(--clr-sky); background: rgba(74,144,217,.12);
         }
+        [data-theme="halloween"] code,
+        [data-theme="halloween"] .mono {
+            color: var(--clr-sky); background: rgba(255,117,24,.12);
+        }
         /* FOOTER */
         .erp-footer {
             background: var(--clr-navy); color: rgba(255,255,255,.6);
             text-align: center; font-size: .78rem;
             padding: .75rem; border-top: 2px solid var(--clr-gold);
+        }
+        /* EXTRAS HALLOWEEN */
+        [data-theme="halloween"] .erp-navbar {
+            background: linear-gradient(90deg, #1A1A1A 0%, #2B1240 100%);
+        }
+        [data-theme="halloween"] .erp-brand {
+            text-shadow: 0 0 10px rgba(255,117,24,.55);
+        }
+        [data-theme="halloween"] .erp-card:hover {
+            border-color: var(--clr-gold);
+            box-shadow: 0 0 18px rgba(255,117,24,.35);
+        }
+        [data-theme="halloween"] .erp-footer {
+            background: linear-gradient(90deg, #2B1240 0%, #1A1A1A 100%);
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -251,7 +307,7 @@
 
 <!-- NAVBAR -->
 <nav class="erp-navbar">
-    <a class="erp-brand" href="/">📦 ERP Django <span>· UTEC Celaya</span></a>
+    <a class="erp-brand" href="/">🎃 Mi ERP</a>
     <div class="erp-nav-links">
         <a href="{% url 'productos:inicio' %}"
            class="erp-nav-link {% block nav_productos %}{% endblock %}">Productos</a>
@@ -271,7 +327,7 @@
         {% else %}
             <a href="/accounts/login/" class="erp-nav-link">Entrar</a>
         {% endif %}
-        <button class="theme-toggle" id="themeBtn" title="Modo claro/oscuro">🌙</button>
+        <button class="theme-toggle" id="themeBtn" title="Cambiar tema">🌙</button>
     </div>
 </nav>
 
@@ -298,29 +354,33 @@
 
 <!-- FOOTER -->
 <footer class="erp-footer">
-    ERP Django · Django 4.2 LTS · Fable 5 AzulERP · UTEC Celaya · Espiral 1
+    🎃 Mi ERP · Hecho con Django 4.2 LTS · Feliz Halloween 👻
 </footer>
 
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
 </script>
 
-<!-- Toggle modo noche -->
+<!-- Selector de temas: Halloween, oscuro, Bosque y claro -->
 <script>
 (function () {
-    var btn  = document.getElementById('themeBtn');
-    var html = document.documentElement;
-    var icons = { light: '🌙', dark: '☀️' };
-    var saved = localStorage.getItem('erpTheme') || 'light';
+    var btn    = document.getElementById('themeBtn');
+    var html   = document.documentElement;
+    var themes = ['halloween', 'dark', 'bosque', 'light'];
+    // El icono muestra a qué tema se pasa al hacer clic
+    var icons  = { halloween: '🌙', dark: '🌲', bosque: '☀️', light: '🎃' };
+    var saved  = localStorage.getItem('erpTema');
+    if (themes.indexOf(saved) === -1) { saved = 'halloween'; }
     html.setAttribute('data-theme', saved);
-    if (btn) btn.textContent = icons[saved];
     if (btn) {
+        btn.textContent = icons[saved];
+        btn.title = 'Cambiar tema';
         btn.addEventListener('click', function () {
             var current = html.getAttribute('data-theme');
-            var next    = current === 'light' ? 'dark' : 'light';
+            var next = themes[(themes.indexOf(current) + 1) % themes.length];
             html.setAttribute('data-theme', next);
             btn.textContent = icons[next];
-            localStorage.setItem('erpTheme', next);
+            localStorage.setItem('erpTema', next);
         });
     }
 })();

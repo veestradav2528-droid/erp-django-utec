@@ -18,40 +18,40 @@ def bienvenida(request):
     """
     modulos = [
         {
-            'nombre': 'Productos',
-            'icono': '📦',
+            'nombre': 'La despensa embrujada',
+            'icono': '🎃',
             'url': reverse('productos:inicio'),
-            'descripcion': 'Inventario, precios y stock',
+            'descripcion': 'Productos, precios y existencias bajo vigilancia',
         },
         {
-            'nombre': 'Clientes',
-            'icono': '👥',
+            'nombre': 'Los visitantes de la noche',
+            'icono': '🧛',
             'url': reverse('clientes:inicio'),
-            'descripcion': 'Cartera y gestión de clientes',
+            'descripcion': 'Quién te compra y cómo contactarlo',
         },
         {
-            'nombre': 'Proveedores',
-            'icono': '🏭',
+            'nombre': 'Los brujos proveedores',
+            'icono': '🧙',
             'url': reverse('proveedores:inicio'),
-            'descripcion': 'Red de proveedores',
+            'descripcion': 'Quién te surte la poción y a qué precio',
         },
         {
-            'nombre': 'Ventas',
-            'icono': '💰',
+            'nombre': 'El caldero de ventas',
+            'icono': '🍬',
             'url': reverse('ventas:inicio'),
-            'descripcion': 'Pedidos, facturas y cobros',
+            'descripcion': 'Pedidos y cobros: el botín de la noche',
         },
         {
-            'nombre': 'Reportes',
-            'icono': '📊',
+            'nombre': 'La bola de cristal',
+            'icono': '🔮',
             'url': reverse('reportes:inicio'),
-            'descripcion': 'Dashboard y analítica',
+            'descripcion': 'Mira cómo va tu negocio en números',
         },
         {
-            'nombre': 'Admin',
-            'icono': '⚙️',
+            'nombre': 'El laboratorio secreto',
+            'icono': '🦇',
             'url': '/admin/',
-            'descripcion': 'Panel de administración Django',
+            'descripcion': 'Panel de administración para tus hechizos',
         },
     ]
     return render(request, 'bienvenida.html', {'modulos': modulos})
