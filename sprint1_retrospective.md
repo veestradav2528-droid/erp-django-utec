@@ -32,4 +32,8 @@
 | **Total** | **21** | **21** |
 
 **Velocidad del equipo Sprint 1:** 21 puntos
+<<<<<<< HEAD
 **Velocidad acumulada (S0 + S1):** 31 puntos
+=======
+**Velocidad acumulada (S0 + S1):** 31 puntos
+>>>>>>> a1edb5560bee2884c771fb7d80901bbcaa767d4b
