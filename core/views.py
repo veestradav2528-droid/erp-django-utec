@@ -20,25 +20,25 @@ def bienvenida(request):
         {
             'nombre': 'La despensa embrujada',
             'icono': '🎃',
-            'url': reverse('productos:inicio'),
+            'url': reverse('productos:lista'),
             'descripcion': 'Productos, precios y existencias bajo vigilancia',
         },
         {
             'nombre': 'Los visitantes de la noche',
             'icono': '🧛',
-            'url': reverse('clientes:inicio'),
+            'url': reverse('clientes:lista'),
             'descripcion': 'Quién te compra y cómo contactarlo',
         },
         {
             'nombre': 'Los brujos proveedores',
             'icono': '🧙',
-            'url': reverse('proveedores:inicio'),
+            'url': reverse('proveedores:lista'),
             'descripcion': 'Quién te surte la poción y a qué precio',
         },
         {
             'nombre': 'El caldero de ventas',
             'icono': '🍬',
-            'url': reverse('ventas:inicio'),
+            'url': reverse('ventas:lista'),
             'descripcion': 'Pedidos y cobros: el botín de la noche',
         },
         {
