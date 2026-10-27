@@ -12,7 +12,8 @@ Resultado esperado:
 """
 from decimal import Decimal
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
+from django.core.management import call_command
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -26,9 +27,12 @@ class ProductoEscrituraTest(TestCase):
     """Tests de CreateView, UpdateView y DeleteView de Producto."""
 
     def setUp(self):
+        call_command('crear_grupos')
         self.user = User.objects.create_user(
             'testuser', password='testpass123'
         )
+        grupo = Group.objects.get(name='Gerente')
+        self.user.groups.add(grupo)
         self.cat  = Categoria.objects.create(nombre='Cat Test')
         self.prod = Producto.objects.create(
             nombre='Laptop', precio=Decimal('10000.00'),
@@ -111,6 +115,8 @@ class ClienteEscrituraTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user('userC', password='pass')
+        grupo, _ = Group.objects.get_or_create(name='Gerente')
+        self.user.groups.add(grupo)
 
     def test_crear_cliente_sin_auth_redirige(self):
         r = self.client.get(reverse('clientes:crear'))
@@ -152,6 +158,8 @@ class ProveedorEscrituraTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user('userP', password='pass')
+        grupo, _ = Group.objects.get_or_create(name='Gerente')
+        self.user.groups.add(grupo)
         self.prov = Proveedor.objects.create(
             nombre='Prov Test', correo='prov@test.com'
         )
@@ -176,6 +184,8 @@ class VentaEscrituraTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user('userV', password='pass')
+        grupo, _ = Group.objects.get_or_create(name='Gerente')
+        self.user.groups.add(grupo)
         cat       = Categoria.objects.create(nombre='Cat')
         self.prod = Producto.objects.create(
             nombre='P', precio=Decimal('100.00'), stock=5, categoria=cat
@@ -189,6 +199,11 @@ class VentaEscrituraTest(TestCase):
     def test_post_valido_crea_venta(self):
         """POST válido crea Venta + DetalleVenta y redirige al detalle."""
         self.client.force_login(self.user)
+        # Asegurar que el usuario tiene el permiso add_venta
+        from django.contrib.auth.models import Permission
+        perm = Permission.objects.get(codename='add_venta')
+        self.user.groups.first().permissions.add(perm)
+
         r = self.client.post(reverse('ventas:crear'), {
             'cliente':         self.cli.pk,
             'producto':        self.prod.pk,
