@@ -1,6 +1,3 @@
-
-Guia_Lab_W08.md
-100 %
 # Guía de Laboratorio — W08
 ## ERP Django · Espiral 3 · Semana 8 de 24
 ### Técnico en Programación (SEP 3061300006-23) · UTEC Celaya
@@ -1577,4 +1574,3 @@ git log --oneline
 *Guía de Laboratorio W08 · ERP Django*
 *Espiral 3 · Sprint 2 Desarrollo · CRUD Completo + LoginRequiredMixin + Messages*
 *SEP 3061300006-23 · UTEC Celaya · MC. Román Fernando López González*
-Mostrando Guia_Lab_W08.md.

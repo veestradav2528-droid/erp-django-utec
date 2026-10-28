@@ -1,4 +1,3 @@
-
 # Guía de Laboratorio — W02
 ## ERP Django · Espiral 1 · Semana 2 de 24
 ### Técnico en Programación (SEP 3061300006-23) · UTEC Celaya

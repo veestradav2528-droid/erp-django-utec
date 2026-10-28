@@ -1,6 +1,3 @@
-
-Guia_Lab_W09.md
-100 %
 # Guía de Laboratorio — W09
 ## ERP Django · Espiral 3 · Semana 9 de 24
 ### Técnico en Programación (SEP 3061300006-23) · UTEC Celaya
@@ -1324,4 +1321,3 @@ python manage.py check --deploy
 *Guía de Laboratorio W09 · ERP Django*
 *Espiral 3 Cierre · Sprint 2 Review + Retrospectiva · Hito M3*
 *SEP 3061300006-23 · UTEC Celaya · MC. Román Fernando López González*
-Mostrando Guia_Lab_W09.md.

@@ -1,6 +1,3 @@
-
-Guia_Lab_W06.md
-100 %
 # Guía de Laboratorio — W06
 ## ERP Django · Espiral 2 · Semana 6 de 24
 ### Técnico en Programación (SEP 3061300006-23) · UTEC Celaya
@@ -1168,4 +1165,3 @@ git log --oneline
 *Guía de Laboratorio W06 · ERP Django*
 *Espiral 2 Cierre · Sprint 1 Review + Retrospectiva · Hito M2*
 *SEP 3061300006-23 · UTEC Celaya · MC. Román Fernando López González*
-Mostrando Guia_Lab_W06.md.

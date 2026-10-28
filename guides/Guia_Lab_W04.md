@@ -1,6 +1,3 @@
-
-Guia_Lab_W04.md
-100 %
 # Guía de Laboratorio — W04
 ## ERP Django · Espiral 2 · Semana 4 de 24
 ### Técnico en Programación (SEP 3061300006-23) · UTEC Celaya
@@ -1156,4 +1153,3 @@ git push origin main
 *Guía de Laboratorio W04 · ERP Django*
 *Espiral 2 · Sprint 1 Planning · Diseño ER + Normalización 3FN*
 *SEP 3061300006-23 · UTEC Celaya · MC. Román Fernando López González*
-Mostrando Guia_Lab_W05.md.

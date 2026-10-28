@@ -1,6 +1,3 @@
-
-Guia_Lab_W05.md
-100 %
 # Guía de Laboratorio — W05
 ## ERP Django · Espiral 2 · Semana 5 de 24
 ### Técnico en Programación (SEP 3061300006-23) · UTEC Celaya
@@ -1306,4 +1303,3 @@ git log --oneline
 *Guía de Laboratorio W05 · ERP Django*
 *Espiral 2 · Sprint 1 Desarrollo · 8 Modelos Django + Migraciones + Admin*
 *SEP 3061300006-23 · UTEC Celaya · MC. Román Fernando López González*
-Mostrando Guia_Lab_W05.md.
