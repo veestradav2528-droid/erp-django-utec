@@ -1,12 +1,19 @@
 # productos/views.py
-"""Vistas de la app productos — W07.
+"""Vistas de la app productos — W07/W08/W11.
 
-ListView y DetailView con select_related y paginación.
-Escritura (Create/Update/Delete) se implementa en W08.
+ListView y DetailView con select_related y paginación (W07).
+Create/Update/Delete con mensajes flash (W08).
+W11: Create/Update usan ProductoForm, que maneja el campo imagen
+     (request.FILES lo procesa Django automáticamente).
 """
-# productos/views.py — actualizar el import al inicio:
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.views.generic import DetailView, ListView
+from django.urls import reverse_lazy
+from django.views.generic import (
+    CreateView, DeleteView, DetailView, ListView, UpdateView
+)
+
+from .forms import ProductoForm
 from .models import Producto
 
 
@@ -55,15 +62,6 @@ class ProductoDetailView(DetailView):
     def get_queryset(self):
         """Pre-carga FKs para evitar queries adicionales en el template."""
         return Producto.objects.select_related('categoria', 'proveedor')
-    # productos/views.py — agregar los imports al inicio del archivo:
-from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
-from django.views.generic import (
-    CreateView, DeleteView, DetailView, ListView, UpdateView
-)
-
-from .forms import ProductoForm
 
 
 class ProductoCreateView(LoginRequiredMixin, CreateView):
@@ -74,7 +72,7 @@ class ProductoCreateView(LoginRequiredMixin, CreateView):
     """
 
     model         = Producto
-    form_class    = ProductoForm
+    form_class    = ProductoForm      # W11: incluye el campo imagen
     template_name = 'productos/crear.html'
     success_url   = reverse_lazy('productos:lista')  # reverse_lazy (no reverse)
 
@@ -92,7 +90,7 @@ class ProductoUpdateView(LoginRequiredMixin, UpdateView):
     """Formulario para editar un producto existente."""
 
     model         = Producto
-    form_class    = ProductoForm
+    form_class    = ProductoForm      # W11: incluye el campo imagen
     template_name = 'productos/editar.html'
     pk_url_kwarg  = 'producto_id'
     success_url   = reverse_lazy('productos:lista')
@@ -106,14 +104,13 @@ class ProductoUpdateView(LoginRequiredMixin, UpdateView):
         return response
 
 
-# Reemplazar la clase ProductoDeleteView:
 class ProductoDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
     model               = Producto
     template_name       = 'productos/eliminar.html'
     pk_url_kwarg        = 'producto_id'
     success_url         = reverse_lazy('productos:lista')
     permission_required = 'productos.delete_producto'
-    raise_exception     = False  # Cambiado a False para permitir redirección a login
+    raise_exception     = False  # False: redirige a login si no tiene permiso
 
     def form_valid(self, form):
         nombre   = self.object.nombre

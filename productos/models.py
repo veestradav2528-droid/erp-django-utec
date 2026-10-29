@@ -1,11 +1,12 @@
 # productos/models.py
-"""Modelos de la app productos — Espiral 2 W05/W06.
+"""Modelos de la app productos — Espiral 2 W05/W06/W11.
 
 Modelos:
   1. Categoria  (sin FK)
   2. Producto   (FK → Categoria, FK → Proveedor)
 
 W06: Producto.clean() agrega validaciones de negocio (precio y stock >= 0).
+W11: Producto.imagen (ImageField) para la foto del producto.
 """
 from decimal import Decimal
 
@@ -14,6 +15,8 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 from proveedores.models import Proveedor
+
+from .validators import validar_imagen_producto
 
 
 class Categoria(models.Model):
@@ -79,6 +82,14 @@ class Producto(models.Model):
     )
     activo    = models.BooleanField(
         default=True, verbose_name='Activo'
+    )
+    imagen    = models.ImageField(          # campo W11
+        upload_to='productos/',            # subcarpeta dentro de MEDIA_ROOT
+        null=True,
+        blank=True,
+        verbose_name='Imagen del producto',
+        help_text='Formatos permitidos: JPEG, PNG, WEBP. Máximo 5 MB.',
+        validators=[validar_imagen_producto],   # ← agregado en 2.3
     )
     creado    = models.DateTimeField(
         auto_now_add=True, verbose_name='Fecha de registro'
