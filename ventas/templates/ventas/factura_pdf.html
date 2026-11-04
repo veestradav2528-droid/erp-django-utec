@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Factura #{{ venta.pk }}</title>
+    <style>
+        @page {
+            size: a4 portrait;
+            margin: 2cm;
+            @frame footer {
+                -pdf-frame-content: footerContent;
+                bottom: 1cm;
+                margin-left: 2cm;
+                margin-right: 2cm;
+                height: 1cm;
+            }
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            color: #1A1A2E;
+        }
+        .header {
+            background-color: #0A2342;
+            color: #FFFFFF;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .header-title {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #B8860B;
+        }
+        .table-data {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        .table-data td {
+            padding: 6px;
+            border: 1px solid #E8F0FB;
+        }
+        .table-data .lbl {
+            background-color: #E8F0FB;
+            font-weight: bold;
+            color: #0A2342;
+            width: 25%;
+        }
+        .table-items {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .table-items th {
+            background-color: #0A2342;
+            color: #FFFFFF;
+            padding: 8px;
+            text-align: left;
+        }
+        .table-items td {
+            padding: 6px;
+            border-bottom: 1px solid #E8F0FB;
+        }
+        .text-right { text-align: right; }
+        .total-box {
+            margin-top: 15px;
+            width: 40%;
+            float: right;
+            border-collapse: collapse;
+        }
+        .total-box td {
+            padding: 6px;
+            border: 1px solid #E8F0FB;
+        }
+        .total-box .final {
+            background-color: #FDF8E8;
+            font-weight: bold;
+            color: #B8860B;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-title">FACTURA</div>
+        <div>{{ config.nombre_empresa }}</div>
+        <div>Folio: #{{ venta.pk|stringformat:"05d" }}</div>
+        <div>Fecha: {{ venta.fecha|date:"d/m/Y H:i" }}</div>
+    </div>
+
+    <table class="table-data">
+        <tr>
+            <td class="lbl">Cliente:</td>
+            <td>{{ venta.cliente.nombre }}</td>
+            <td class="lbl">Correo:</td>
+            <td>{{ venta.cliente.correo }}</td>
+        </tr>
+    </table>
+
+    <table class="table-items">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Producto</th>
+                <th class="text-right">Precio Unit.</th>
+                <th class="text-right">Cant.</th>
+                <th class="text-right">Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detalle in venta.detalles.all %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ detalle.producto.nombre }}</td>
+                <td class="text-right">${{ detalle.precio_unitario }}</td>
+                <td class="text-right">{{ detalle.cantidad }}</td>
+                <td class="text-right">${{ detalle.subtotal }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align:center;">Sin detalles registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <table class="total-box">
+        <tr class="final">
+            <td><strong>TOTAL:</strong></td>
+            <td class="text-right"><strong>${{ venta.total }}</strong></td>
+        </tr>
+    </table>
+
+    <div id="footerContent" style="text-align: right; font-size: 8pt; color: #5A6A7E;">
+        Página <pdf:pagenumber/> de <pdf:pagecount/>
+    </div>
+
+</body>
+</html>

@@ -100,3 +100,48 @@ class VentaDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
         response = super().form_valid(form)
         messages.success(self.request, f'Venta #{pk} eliminada.')
         return response
+
+
+
+from io import BytesIO
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, Http404
+from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
+from xhtml2pdf import pisa
+
+from configuracion.models import ConfiguracionERP
+from .models import Venta
+
+
+@login_required
+def venta_pdf(request, venta_id: int) -> HttpResponse:
+    """Genera y descarga la factura en PDF de una venta usando xhtml2pdf."""
+    venta = get_object_or_404(
+        Venta.objects
+        .select_related('cliente')
+        .prefetch_related('detalles__producto'),
+        pk=venta_id
+    )
+
+    config = ConfiguracionERP.get_instance()
+    context = {
+        'venta': venta,
+        'config': config,
+    }
+
+    html_string = render_to_string('ventas/factura_pdf.html', context, request=request)
+
+    buffer = BytesIO()
+    pisa_status = pisa.CreatePDF(src=html_string, dest=buffer)
+
+    if pisa_status.err:
+        return HttpResponse('Error al generar el PDF de la factura', status=500)
+
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="factura_{venta.pk:05d}.pdf"'
+    return response
+    

@@ -1,25 +1,30 @@
 # productos/views.py
-"""Vistas de la app productos — W07/W08/W11.
-
+"""Vistas de la app productos — W07/W08/W11/W12.
+ 
 ListView y DetailView con select_related y paginación (W07).
 Create/Update/Delete con mensajes flash (W08).
 W11: Create/Update usan ProductoForm, que maneja el campo imagen
      (request.FILES lo procesa Django automáticamente).
+W12: Exportación del inventario a Excel con openpyxl.
 """
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.http import HttpResponse
 from django.urls import reverse_lazy
 from django.views.generic import (
     CreateView, DeleteView, DetailView, ListView, UpdateView
 )
-
+from openpyxl import Workbook
+from openpyxl.styles import Font
+ 
 from .forms import ProductoForm
 from .models import Producto
-
-
+ 
+ 
 class ProductoListView(ListView):
     """Lista paginada de productos activos.
-
+ 
     Atributos:
         model:               Modelo a listar.
         template_name:       Plantilla HTML (Fable 5 AzulERP).
@@ -27,12 +32,12 @@ class ProductoListView(ListView):
         paginate_by:         20 productos por página.
         queryset:            Solo productos activos, con FK pre-cargadas.
     """
-
+ 
     model               = Producto
     template_name       = 'productos/lista.html'
     context_object_name = 'productos'
     paginate_by         = 20
-
+ 
     def get_queryset(self):
         """Devuelve productos activos con FKs pre-cargadas (evita N+1)."""
         return (
@@ -41,11 +46,11 @@ class ProductoListView(ListView):
             .filter(activo=True)
             .order_by('nombre')
         )
-
-
+ 
+ 
 class ProductoDetailView(DetailView):
     """Detalle de un producto por ID de URL.
-
+ 
     Atributos:
         model:               Modelo a mostrar.
         template_name:       Plantilla HTML.
@@ -53,29 +58,29 @@ class ProductoDetailView(DetailView):
         pk_url_kwarg:        Parámetro de URL. Usa 'producto_id'
                              para ser consistente con W02.
     """
-
+ 
     model               = Producto
     template_name       = 'productos/detalle.html'
     context_object_name = 'producto'
     pk_url_kwarg        = 'producto_id'
-
+ 
     def get_queryset(self):
         """Pre-carga FKs para evitar queries adicionales en el template."""
         return Producto.objects.select_related('categoria', 'proveedor')
-
-
+ 
+ 
 class ProductoCreateView(LoginRequiredMixin, CreateView):
     """Formulario para crear un nuevo producto.
-
+ 
     LoginRequiredMixin PRIMERO en la herencia (obligatorio).
     Redirige a /accounts/login/ si el usuario no está autenticado.
     """
-
+ 
     model         = Producto
     form_class    = ProductoForm      # W11: incluye el campo imagen
     template_name = 'productos/crear.html'
     success_url   = reverse_lazy('productos:lista')  # reverse_lazy (no reverse)
-
+ 
     def form_valid(self, form):
         """Agrega mensaje flash de éxito al guardar."""
         response = super().form_valid(form)
@@ -84,17 +89,17 @@ class ProductoCreateView(LoginRequiredMixin, CreateView):
             f'Producto "{self.object.nombre}" creado exitosamente.'
         )
         return response
-
-
+ 
+ 
 class ProductoUpdateView(LoginRequiredMixin, UpdateView):
     """Formulario para editar un producto existente."""
-
+ 
     model         = Producto
     form_class    = ProductoForm      # W11: incluye el campo imagen
     template_name = 'productos/editar.html'
     pk_url_kwarg  = 'producto_id'
     success_url   = reverse_lazy('productos:lista')
-
+ 
     def form_valid(self, form):
         response = super().form_valid(form)
         messages.success(
@@ -102,18 +107,59 @@ class ProductoUpdateView(LoginRequiredMixin, UpdateView):
             f'Producto "{self.object.nombre}" actualizado.'
         )
         return response
-
-
+ 
+ 
 class ProductoDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    """Confirmación y eliminación de un producto (requiere permiso)."""
+ 
     model               = Producto
     template_name       = 'productos/eliminar.html'
     pk_url_kwarg        = 'producto_id'
     success_url         = reverse_lazy('productos:lista')
     permission_required = 'productos.delete_producto'
     raise_exception     = False  # False: redirige a login si no tiene permiso
-
+ 
     def form_valid(self, form):
         nombre   = self.object.nombre
         response = super().form_valid(form)
         messages.success(self.request, f'Producto "{nombre}" eliminado.')
         return response
+ 
+ 
+# ─────────────────────────────────────────────────────────────
+# W12 — Exportación a Excel
+# ─────────────────────────────────────────────────────────────
+ 
+@login_required
+def exportar_excel(request) -> HttpResponse:
+    """Genera y descarga un archivo Excel con el inventario de productos."""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Productos"
+ 
+    # Encabezados en negritas
+    ws.append(["ID", "Nombre", "Precio", "Stock", "Categoría"])
+    for celda in ws[1]:
+        celda.font = Font(bold=True)
+ 
+    for prod in Producto.objects.select_related('categoria').order_by('nombre'):
+        ws.append([
+            prod.pk,
+            prod.nombre,
+            float(prod.precio),
+            prod.stock,
+            prod.categoria.nombre if prod.categoria else "Sin categoría",
+        ])
+ 
+    response = HttpResponse(
+        content_type=(
+            "application/vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        )
+    )
+    response['Content-Disposition'] = (
+        'attachment; filename="inventario_productos.xlsx"'
+    )
+    wb.save(response)
+    return response
+ 
