@@ -1,303 +1,1064 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="halloween">
+<html lang="es" data-theme="navidad">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#1A1A1A">
+    <meta name="theme-color" content="#040A10">
     <title>{% block title %}Panel{% endblock %} · Mi ERP</title>
 
-    <!-- Google Fonts: Playfair Display + Inter + JetBrains Mono -->
+    <!-- Diagnóstico: si algún script falla, aparece un aviso rojo abajo con el error exacto -->
+    <script>
+    (function () {
+        console.log('Mi ERP · base.html v9 cargado');
+        function aviso(txt) {
+            var d = document.createElement('div');
+            d.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:99999;background:#8E1B2F;color:#fff;' +
+                              'font:12px/1.4 monospace;padding:8px 12px;border-radius:8px;cursor:pointer;white-space:pre-wrap';
+            d.textContent = '⚠ Error en la página (clic para cerrar): ' + txt;
+            d.onclick = function () { d.remove(); };
+            (document.body || document.documentElement).appendChild(d);
+        }
+        window.addEventListener('error', function (e) {
+            aviso((e.message || 'error') + (e.lineno ? '  [línea ' + e.lineno + ']' : ''));
+        });
+    })();
+    </script>
+
+    <!-- Tema por fecha + modo ligero: se decide ANTES de pintar para que no parpadee -->
+    <script>
+    (function () {
+        var html  = document.documentElement;
+        // El selector manual SOLO permite los dos temas navideños.
+        // Halloween y Normal los decide la fecha (modo automático).
+        var TEMAS = ['navidad', 'invierno'];
+
+        // Automático: 1 oct–2 nov Halloween · 3 nov–6 ene Navidad · resto del año normal
+        window.erpTemaPorFecha = function () {
+            var d = new Date(), m = d.getMonth() + 1, dia = d.getDate();
+            if (m === 10 || (m === 11 && dia <= 2)) return 'halloween';
+            if (m === 11 || m === 12 || (m === 1 && dia <= 6)) return 'navidad';
+            return 'normal';
+        };
+        window.erpAplicarTema = function (modo) {
+            var esFijo = TEMAS.indexOf(modo) !== -1;
+            html.setAttribute('data-theme', esFijo ? modo : window.erpTemaPorFecha());
+            html.setAttribute('data-modo', esFijo ? modo : 'auto');
+        };
+
+        var guardado = null;
+        try { guardado = localStorage.getItem('erpTemaV6'); } catch (e) {}
+        window.erpAplicarTema(guardado);
+
+        // Modo ligero: celular, equipo lento o "reducir movimiento"
+        var lite = window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+                   window.innerWidth < 700 ||
+                   (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) ||
+                   (navigator.deviceMemory && navigator.deviceMemory <= 2);
+        if (lite) html.setAttribute('data-lite', '1');
+    })();
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet">
-
-    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
           rel="stylesheet">
 
-    <!-- Fable 5 AzulERP — Design System -->
     <style>
-        /* TOKENS MODO DÍA */
-        :root, [data-theme="light"] {
+        /* ═══════════ TEMA 1 · NOCHE DE NAVIDAD (pino, rojo, oro) ═══════════ */
+        :root, [data-theme="navidad"] {
+            --clr-navy   : #0E2F1F;
+            --clr-royal  : #C62A3C;
+            --clr-sky    : #BFE3E0;
+            --clr-ice    : rgba(255,255,255,.04);
+            --clr-gold   : #F0C45A;
+            --clr-amber  : #F5D27A;
+            --clr-cream  : rgba(198,42,60,.18);
+            --clr-bg     : #040A10;
+            --clr-surface: rgba(10,30,22,.68);
+            --clr-text   : #F5F7F2;
+            --clr-muted  : #9DB5A6;
+            --clr-border : rgba(240,196,90,.24);
+            --clr-danger : #E04656;
+            --clr-ok     : #5FD38D;
+            --clr-glow   : rgba(240,196,90,.38);
+            --grad-a     : #C62A3C;
+            --grad-b     : #F0C45A;
+            --nav-bg     : linear-gradient(180deg, rgba(14,46,31,.90) 0%, rgba(4,14,10,.90) 100%);
+            --sky        : linear-gradient(180deg, #02050C 0%, #06131F 45%, #0B2620 80%, #123826 100%);
+            --aurora     : radial-gradient(ellipse 70% 30% at 20% 22%, rgba(60,200,120,.14), transparent 70%),
+                           radial-gradient(ellipse 60% 26% at 80% 30%, rgba(198,42,60,.14), transparent 70%);
+            --pino-a     : #05120C;
+            --pino-b     : #0A2216;
+            --pino-c     : #123828;
+            --mont-a     : #0D3028;
+            --mont-b     : #15483A;
+            --colina     : #274E4A;
+            --nieve      : #B9D4DE;
+            --nieve2     : #7FA0B4;
+            --rayas      : repeating-linear-gradient(-45deg, #D6384B 0 10px, #F5F7F2 10px 20px);
+            --rayas-card : repeating-linear-gradient(-45deg, #D6384B 0 8px, #F5F7F2 8px 16px);
+            --au1        : #2BFF88;
+            --au2        : #00F0FF;
+            --au3        : #FF3DF2;
+            --shadow-sm  : 0 2px 10px rgba(0,0,0,.5);
+            --shadow-md  : 0 10px 32px rgba(0,0,0,.55);
+        }
+
+        /* ═══════════ TEMA 2 · NOCHE ÁRTICA (hielo, aurora, plata) ═══════════ */
+        [data-theme="invierno"] {
+            --clr-navy   : #0B2545;
+            --clr-royal  : #D6384B;
+            --clr-sky    : #BFE6FF;
+            --clr-ice    : rgba(255,255,255,.05);
+            --clr-gold   : #BFE6FF;
+            --clr-amber  : #D6EFFF;
+            --clr-cream  : rgba(214,56,75,.18);
+            --clr-bg     : #030814;
+            --clr-surface: rgba(10,28,58,.62);
+            --clr-text   : #F2F8FF;
+            --clr-muted  : #93AECB;
+            --clr-border : rgba(168,220,255,.24);
+            --clr-danger : #FF7A85;
+            --clr-ok     : #6EE7B7;
+            --clr-glow   : rgba(120,200,255,.40);
+            --grad-a     : #D6384B;
+            --grad-b     : #7CF2D4;
+            --nav-bg     : linear-gradient(180deg, rgba(12,40,80,.90) 0%, rgba(4,14,32,.90) 100%);
+            --sky        : linear-gradient(180deg, #010413 0%, #07122A 45%, #0E1F4A 80%, #1A2C66 100%);
+            --aurora     : radial-gradient(ellipse 70% 30% at 25% 20%, rgba(124,242,212,.22), transparent 70%),
+                           radial-gradient(ellipse 60% 28% at 78% 28%, rgba(140,100,255,.20), transparent 70%);
+            --pino-a     : #040A1C;
+            --pino-b     : #0A1636;
+            --pino-c     : #12245A;
+            --mont-a     : #14275C;
+            --mont-b     : #1E3A80;
+            --colina     : #2A4A86;
+            --nieve      : #C5DDF5;
+            --nieve2     : #86A8D6;
+            --rayas      : repeating-linear-gradient(-45deg, #D6384B 0 10px, #F5F7F2 10px 20px);
+            --rayas-card : repeating-linear-gradient(-45deg, #D6384B 0 8px, #F5F7F2 8px 16px);
+            --au1        : #7CF2D4;
+            --au2        : #7CC4FF;
+            --au3        : #B08CFF;
+            --shadow-sm  : 0 2px 10px rgba(0,0,0,.5);
+            --shadow-md  : 0 10px 32px rgba(0,0,0,.55);
+        }
+
+        /* ═══════════ TEMA AUTOMÁTICO · HALLOWEEN / DÍA DE MUERTOS (solo por fecha) ═══════════ */
+        [data-theme="halloween"] {
+            --clr-navy   : #1A1026;
+            --clr-royal  : #7A2BD4;
+            --clr-sky    : #FFB46B;
+            --clr-ice    : rgba(255,255,255,.04);
+            --clr-gold   : #FF8A1F;
+            --clr-amber  : #FFB35C;
+            --clr-cream  : rgba(122,43,212,.20);
+            --clr-bg     : #07040C;
+            --clr-surface: rgba(26,14,40,.72);
+            --clr-text   : #F6EEFF;
+            --clr-muted  : #B7A4D0;
+            --clr-border : rgba(255,138,31,.28);
+            --clr-danger : #FF4D6A;
+            --clr-ok     : #9AE62E;
+            --clr-glow   : rgba(255,138,31,.40);
+            --grad-a     : #7A2BD4;
+            --grad-b     : #FF8A1F;
+            --nav-bg     : linear-gradient(180deg, rgba(34,16,56,.92) 0%, rgba(10,5,18,.92) 100%);
+            --sky        : linear-gradient(180deg, #04020A 0%, #120824 55%, #2A0F3E 100%);
+            --aurora     : radial-gradient(ellipse 70% 30% at 22% 22%, rgba(255,117,24,.14), transparent 70%),
+                           radial-gradient(ellipse 60% 26% at 80% 30%, rgba(122,43,212,.20), transparent 70%);
+            --rayas      : repeating-linear-gradient(-45deg, #FF8A1F 0 10px, #1A1026 10px 20px);
+            --rayas-card : repeating-linear-gradient(-45deg, #FF8A1F 0 8px, #1A1026 8px 16px);
+            --au1        : #FF8A1F;
+            --au2        : #9B5CFF;
+            --au3        : #9AE62E;
+            --shadow-sm  : 0 2px 10px rgba(0,0,0,.5);
+            --shadow-md  : 0 10px 32px rgba(0,0,0,.55);
+        }
+
+        /* ═══════════ TEMA AUTOMÁTICO · NORMAL (resto del año) ═══════════ */
+        [data-theme="normal"] {
             --clr-navy   : #0A2342;
             --clr-royal  : #1B4F8A;
-            --clr-sky    : #4A90D9;
-            --clr-ice    : #E8F0FB;
+            --clr-sky    : #1B6FB8;
+            --clr-ice    : rgba(10,35,66,.04);
             --clr-gold   : #B8860B;
             --clr-amber  : #D4A017;
-            --clr-cream  : #FDF8E8;
-            --clr-bg     : #F5F7FA;
-            --clr-surface: #FFFFFF;
-            --clr-text   : #1A1A2E;
+            --clr-cream  : rgba(27,79,138,.10);
+            --clr-bg     : #F2F5FA;
+            --clr-surface: rgba(255,255,255,.94);
+            --clr-text   : #14233A;
             --clr-muted  : #5A6A7E;
-            --clr-border : #C8D8EC;
+            --clr-border : rgba(10,35,66,.16);
             --clr-danger : #C0392B;
             --clr-ok     : #1A7A4A;
-            --shadow-sm  : 0 1px 4px rgba(10,35,66,.08);
-            --shadow-md  : 0 4px 16px rgba(10,35,66,.12);
+            --clr-glow   : rgba(27,79,138,.22);
+            --grad-a     : #1B4F8A;
+            --grad-b     : #D4A017;
+            --nav-bg     : linear-gradient(180deg, rgba(15,46,85,.97) 0%, rgba(10,35,66,.97) 100%);
+            --sky        : linear-gradient(180deg, #EAF1FA 0%, #F6F8FC 60%, #FFFFFF 100%);
+            --aurora     : linear-gradient(transparent, transparent);
+            --rayas      : linear-gradient(90deg, #1B4F8A, #D4A017);
+            --rayas-card : linear-gradient(90deg, #1B4F8A, #D4A017);
+            --shadow-sm  : 0 2px 10px rgba(10,35,66,.10);
+            --shadow-md  : 0 10px 30px rgba(10,35,66,.16);
         }
-        /* TOKENS MODO NOCHE */
-        [data-theme="dark"] {
-            --clr-navy   : #1E3A5F;
-            --clr-royal  : #2E5F9E;
-            --clr-sky    : #6BAEE8;
-            --clr-ice    : #1A2A3A;
-            --clr-gold   : #D4AF37;
-            --clr-amber  : #E8C547;
-            --clr-cream  : #2A2510;
-            --clr-bg     : #0D1B2A;
-            --clr-surface: #142033;
-            --clr-text   : #E2EAF4;
-            --clr-muted  : #8AA0B8;
-            --clr-border : #2A3F58;
-            --clr-danger : #E74C3C;
-            --clr-ok     : #2ECC71;
-            --shadow-sm  : 0 1px 4px rgba(0,0,0,.3);
-            --shadow-md  : 0 4px 16px rgba(0,0,0,.4);
-        }
-        /* TOKENS HALLOWEEN */
-        [data-theme="halloween"] {
-            --clr-navy   : #1A1A1A;
-            --clr-royal  : #5B2A86;
-            --clr-sky    : #FF9A3C;
-            --clr-ice    : #241533;
-            --clr-gold   : #FF7518;
-            --clr-amber  : #FFA64D;
-            --clr-cream  : #2B1A10;
-            --clr-bg     : #0F0A14;
-            --clr-surface: #1B1226;
-            --clr-text   : #F3E9DC;
-            --clr-muted  : #B7A4C9;
-            --clr-border : #3A2552;
-            --clr-danger : #FF4D4D;
-            --clr-ok     : #9ACD32;
-            --shadow-sm  : 0 1px 4px rgba(0,0,0,.4);
-            --shadow-md  : 0 4px 16px rgba(255,117,24,.18);
-        }
-        /* TOKENS BOSQUE */
-        [data-theme="bosque"] {
-            --clr-navy   : #14532D;
-            --clr-royal  : #1E7B45;
-            --clr-sky    : #3FA66B;
-            --clr-ice    : #E6F4EA;
-            --clr-gold   : #C9A227;
-            --clr-amber  : #E0B93A;
-            --clr-cream  : #FBF6DF;
-            --clr-bg     : #F3F8F4;
-            --clr-surface: #FFFFFF;
-            --clr-text   : #12261A;
-            --clr-muted  : #5B7266;
-            --clr-border : #C5DECB;
-            --clr-danger : #C0392B;
-            --clr-ok     : #1A7A4A;
-            --shadow-sm  : 0 1px 4px rgba(20,83,45,.10);
-            --shadow-md  : 0 4px 16px rgba(20,83,45,.16);
-        }
-        /* BASE */
+
+        /* ═══════════ BASE ═══════════ */
         *, *::before, *::after { box-sizing: border-box; }
+        html { scroll-behavior: smooth; background: var(--clr-bg); }
         body {
             font-family: 'Inter','Segoe UI',sans-serif;
             font-size: 15px;
-            background: var(--clr-bg);
             color: var(--clr-text);
+            background: transparent;
             line-height: 1.6;
-            transition: background .25s, color .25s;
             margin: 0;
         }
-        /* NAVBAR */
+        ::selection { background: var(--grad-b); color: #08170F; }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--clr-bg); }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(var(--grad-a), var(--grad-b));
+            border-radius: 10px;
+        }
+
+        /* Parpadeo de luces (se usa en todo el sitio) */
+        @keyframes parpadea { 0%,100% { opacity: 1; } 50% { opacity: .18; } }
+        .lu { animation: parpadea 1.6s ease-in-out infinite; }
+        .lu.l1 { animation-delay: .5s; }
+        .lu.l2 { animation-delay: 1.05s; }
+
+        /* ═══════════ CIELO NOCTURNO (con parallax suave al mover el mouse) ═══════════ */
+        #cielo {
+            position: fixed; inset: 0; z-index: -1;
+            overflow: hidden; pointer-events: none;
+            background: var(--aurora), var(--sky);
+        }
+        #estrellas {
+            position: absolute; inset: -20px;
+            transform: translate(calc(var(--px, 0) * -8px), calc(var(--py, 0) * -6px));
+            transition: transform .25s ease-out;
+        }
+        .estrella {
+            position: absolute; border-radius: 50%; background: #FFF;
+            animation: titilar 3s ease-in-out infinite;
+        }
+        @keyframes titilar { 0%,100% { opacity: .15; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.2); } }
+
+        .luna {
+            position: absolute; top: 12%; right: 8%;
+            width: 92px; height: 92px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #FFFFFF 0%, #F4F1DE 45%, #D9D4B8 100%);
+            box-shadow: 0 0 40px 10px rgba(255,248,220,.35), 0 0 120px 40px rgba(255,248,220,.14);
+            transform: translate(calc(var(--px, 0) * -14px), calc(var(--py, 0) * -10px));
+            transition: transform .25s ease-out;
+        }
+        .luna::before, .luna::after { content: ""; position: absolute; border-radius: 50%; background: rgba(150,145,120,.28); }
+        .luna::before { width: 18px; height: 18px; top: 22px; left: 52px; }
+        .luna::after  { width: 12px; height: 12px; top: 54px; left: 26px; }
+
+        .fugaz {
+            position: absolute; top: 12%; left: 70%;
+            width: 120px; height: 2px; opacity: 0;
+            background: linear-gradient(90deg, transparent, #FFF);
+            transform: rotate(35deg);
+            animation: fugaz 16s ease-in infinite 5s;
+        }
+        @keyframes fugaz {
+            0%   { opacity: 0; transform: translate(0,0) rotate(35deg); }
+            2%   { opacity: 1; }
+            8%   { opacity: 0; transform: translate(-380px,270px) rotate(35deg); }
+            100% { opacity: 0; }
+        }
+
+        /* Sombra del trineo cruzando el cielo (la mueve el JS de abajo) */
+        .trineo-sombra {
+            position: absolute; top: 8%; left: 0;
+            width: 440px;
+            transform: translate(-700px, 0);
+            will-change: transform;
+        }
+        .trineo-sombra svg {
+            width: 100%; height: auto; overflow: visible; display: block;
+            filter: drop-shadow(0 0 6px rgba(255,235,180,.28));
+        }
+
+        /* ═══════════ PAISAJE ═══════════ */
+        .paisaje {
+            position: absolute; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 46vh; min-height: 300px; max-height: 520px;
+            transform: translate(calc(var(--px, 0) * 6px), 0) scale(1.03);
+            transform-origin: 50% 100%;
+            transition: transform .25s ease-out;
+        }
+        .vent { animation: vent 3.4s ease-in-out infinite; filter: drop-shadow(0 0 4px #FFB347); }
+        @keyframes vent { 0%,100% { opacity: 1; } 45% { opacity: .72; } 60% { opacity: .95; } }
+        .humo {
+            fill: #DCE6F0; opacity: 0;
+            transform-box: fill-box; transform-origin: center;
+            animation: humo 5s ease-out infinite;
+        }
+        @keyframes humo {
+            0%   { transform: translate(0,0) scale(.6); opacity: 0; }
+            15%  { opacity: .5; }
+            100% { transform: translate(20px,-62px) scale(2.2); opacity: 0; }
+        }
+        .farol-g { animation: vent 2.6s ease-in-out infinite; }
+
+        /* ═══════════ LUCES LATERALES ═══════════ */
+        .luces-lado { position: fixed; top: 130px; width: 28px; z-index: 800; pointer-events: none; }
+        .luces-lado.izq { left: 2px; }
+        .luces-lado.der { right: 2px; }
+
+        /* ═══════════ NAVBAR (cristal + luces + guirnalda) ═══════════ */
         .erp-navbar {
-            background: var(--clr-navy);
-            border-bottom: 3px solid var(--clr-gold);
-            padding: .65rem 1.5rem;
+            position: sticky; top: 0; z-index: 1000;
+            background: var(--nav-bg);
+            backdrop-filter: blur(16px) saturate(150%);
+            -webkit-backdrop-filter: blur(16px) saturate(150%);
+            padding: 1.7rem 1.5rem .7rem;
             display: flex; align-items: center;
             justify-content: space-between; flex-wrap: wrap; gap: .5rem;
             box-shadow: var(--shadow-md);
+            border-bottom: 2px solid transparent;
+            border-image: linear-gradient(90deg, var(--grad-a), var(--grad-b), var(--grad-a)) 1;
         }
+        .erp-navbar::before,
+        .erp-navbar::after {
+            content: ""; position: absolute; top: 0; left: 0; right: 0;
+            height: 20px; pointer-events: none;
+        }
+        .erp-navbar::before {
+            background:
+                radial-gradient(circle at 14px 12px, #FF5A6B 0 4px, transparent 5px) 0 0 / 56px 20px repeat-x,
+                radial-gradient(circle at 42px 12px, #F0C969 0 4px, transparent 5px) 0 0 / 56px 20px repeat-x;
+            filter: drop-shadow(0 0 5px rgba(255,90,107,.85));
+            animation: luzA 2.8s ease-in-out infinite;
+        }
+        .erp-navbar::after {
+            background: radial-gradient(circle at 28px 12px, #4BD98A 0 4px, transparent 5px) 0 0 / 56px 20px repeat-x;
+            filter: drop-shadow(0 0 5px rgba(75,217,138,.85));
+            animation: luzB 2.8s ease-in-out infinite;
+        }
+        @keyframes luzA { 0%,100% { opacity: 1; }  50% { opacity: .25; } }
+        @keyframes luzB { 0%,100% { opacity: .25; } 50% { opacity: 1; } }
+
+        .guirnalda {
+            position: absolute; top: 100%; left: 0; right: 0;
+            height: 46px; pointer-events: none; z-index: 5;
+            filter: drop-shadow(0 3px 4px rgba(0,0,0,.5));
+        }
+        .guirnalda svg { width: 100%; height: 46px; display: block; }
+        .guirnalda .bola { animation: parpadea 2.2s ease-in-out infinite; }
+
         .erp-brand {
             font-family: 'Playfair Display',Georgia,serif;
-            font-size: 1.3rem; font-weight: 700;
-            color: var(--clr-gold) !important;
-            text-decoration: none; letter-spacing: .04em;
-        }
-        .erp-nav-links { display: flex; align-items: center; gap: .25rem; flex-wrap: wrap; }
-        .erp-nav-link {
-            color: rgba(255,255,255,.82) !important;
-            font-size: .88rem; font-weight: 500;
-            padding: .35rem .75rem; border-radius: 6px;
+            font-size: 1.4rem; font-weight: 700; letter-spacing: .04em;
             text-decoration: none;
-            transition: background .2s, color .2s;
+            background: linear-gradient(90deg, var(--grad-b), #FFFFFF 50%, var(--grad-b));
+            background-size: 200% auto;
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: brillo 6s linear infinite;
+        }
+        @keyframes brillo { to { background-position: 200% center; } }
+
+        .erp-nav-links { display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; }
+        .erp-nav-link {
+            color: rgba(255,255,255,.88) !important;
+            font-size: .88rem; font-weight: 500;
+            padding: .4rem .85rem; border-radius: 999px;
+            text-decoration: none;
+            transition: background .25s, color .25s, box-shadow .25s;
         }
         .erp-nav-link:hover, .erp-nav-link.active {
-            background: var(--clr-royal); color: #FFF !important;
+            background: linear-gradient(135deg, var(--grad-a), color-mix(in srgb, var(--grad-a) 60%, #000));
+            color: #FFF !important;
+            box-shadow: 0 0 16px var(--clr-glow);
         }
         .theme-toggle {
-            background: var(--clr-gold); color: var(--clr-navy);
-            border: none; border-radius: 50%;
-            width: 32px; height: 32px; font-size: .9rem;
-            cursor: pointer; transition: transform .2s;
+            background: linear-gradient(135deg, var(--grad-b), var(--grad-a));
+            color: #08170F; border: none; border-radius: 50%;
+            width: 36px; height: 36px; font-size: 1rem;
+            cursor: pointer; margin-left: .4rem;
+            box-shadow: 0 0 14px var(--clr-glow);
+            transition: transform .3s;
         }
-        .theme-toggle:hover { transform: rotate(20deg); }
-        /* CONTENIDO */
-        .erp-main { padding: 2rem 0; min-height: calc(100vh - 110px); }
-        /* CARDS */
+        .theme-toggle:hover { transform: rotate(25deg) scale(1.1); }
+
+        /* ═══════════ CONTENIDO ═══════════ */
+        .erp-main { padding: 3.2rem 0 2rem; min-height: calc(100vh - 200px); }
+        .erp-main .container { animation: entrar .7s ease both; }
+        @keyframes entrar { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+        .inicio-titulo, .inicio-nombre { color: var(--clr-gold) !important; }
+        .inicio-titulo { text-shadow: 0 0 22px var(--clr-glow); }
+
+        /* ═══════════ TARJETAS (con inclinación 3D y brillo que sigue al mouse) ═══════════ */
         .erp-card {
+            position: relative;
             background: var(--clr-surface);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--clr-border);
-            border-radius: 12px; box-shadow: var(--shadow-sm);
+            border-radius: 18px;
+            box-shadow: var(--shadow-sm);
             padding: 1.5rem; margin-bottom: 1.5rem;
-            transition: box-shadow .2s, border-color .2s;
+            overflow: hidden;
+            transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
         }
-        .erp-card:hover { box-shadow: var(--shadow-md); }
+        .erp-card::before {
+            content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+            background: var(--rayas-card);
+            opacity: .92;
+        }
+        .erp-card:hover {
+            transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-4px);
+            border-color: var(--grad-b);
+            box-shadow: 0 14px 40px rgba(0,0,0,.55), 0 0 28px var(--clr-glow);
+        }
+        .erp-brillo {
+            position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .25s;
+            background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,.13), transparent 60%);
+        }
+        .erp-card:hover .erp-brillo { opacity: 1; }
         .erp-card-header {
-            background: var(--clr-navy); color: #FFF;
-            border-radius: 10px 10px 0 0;
-            padding: .85rem 1.25rem;
-            border-left: 5px solid var(--clr-gold);
+            background: linear-gradient(135deg, var(--grad-a), color-mix(in srgb, var(--grad-a) 40%, #000));
+            color: #FFF; padding: .9rem 1.25rem;
             font-family: 'Playfair Display',serif;
-            font-size: 1.05rem; letter-spacing: .03em;
+            font-size: 1.08rem; letter-spacing: .03em;
             margin: -1.5rem -1.5rem 1.5rem;
+            border-bottom: 1px solid var(--clr-border);
         }
-        /* TABLAS */
+
+        /* ═══════════ TABLAS ═══════════ */
         .erp-table {
             width: 100%; border-collapse: separate; border-spacing: 0;
-            border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm);
+            border-radius: 14px; overflow: hidden;
+            border: 1px solid var(--clr-border);
+            box-shadow: var(--shadow-sm);
         }
         .erp-table thead th {
-            background: var(--clr-navy); color: #FFF;
-            font-weight: 600; font-size: .82rem;
-            text-transform: uppercase; letter-spacing: .06em;
-            padding: .75rem 1rem; border-bottom: 3px solid var(--clr-gold);
+            background: linear-gradient(135deg, var(--grad-a), color-mix(in srgb, var(--grad-a) 35%, #000));
+            color: #FFF; font-weight: 600; font-size: .8rem;
+            text-transform: uppercase; letter-spacing: .08em;
+            padding: .8rem 1rem; border-bottom: 2px solid var(--grad-b);
         }
         .erp-table tbody td {
-            background: var(--clr-surface); padding: .65rem 1rem;
-            border-bottom: 1px solid var(--clr-border); font-size: .9rem;
+            background: var(--clr-surface);
+            padding: .7rem 1rem; font-size: .9rem;
+            border-bottom: 1px solid var(--clr-border);
         }
         .erp-table tbody tr:nth-child(even) td { background: var(--clr-ice); }
-        .erp-table tbody tr:hover td { background: rgba(74,144,217,.08); }
+        .erp-table tbody tr:hover td { background: var(--clr-cream); }
         .erp-table tfoot td {
             background: var(--clr-cream); color: var(--clr-gold);
-            font-weight: 700; border-top: 2px solid var(--clr-gold);
+            font-weight: 700; border-top: 2px solid var(--grad-b);
         }
-        /* BOTONES */
+
+        /* ═══════════ BOTONES ═══════════ */
+        .btn-erp-primary, .btn-erp-gold, .btn-erp-danger {
+            border-radius: 999px; font-weight: 600; font-size: .88rem;
+            padding: .5rem 1.35rem; cursor: pointer;
+            text-decoration: none; display: inline-block;
+            transition: transform .2s, box-shadow .2s, filter .2s;
+        }
         .btn-erp-primary {
-            background: var(--clr-navy); color: #FFF;
-            border: 2px solid var(--clr-gold); border-radius: 8px;
-            padding: .45rem 1.2rem; font-weight: 600; font-size: .88rem;
-            cursor: pointer; text-decoration: none; display: inline-block;
-            transition: background .2s, color .2s;
+            background: linear-gradient(135deg, var(--grad-a), color-mix(in srgb, var(--grad-a) 55%, #000));
+            color: #FFF; border: 1px solid var(--grad-b);
         }
-        .btn-erp-primary:hover { background: var(--clr-gold); color: var(--clr-navy); }
         .btn-erp-gold {
-            background: var(--clr-gold); color: var(--clr-navy);
-            border: 2px solid var(--clr-navy); border-radius: 8px;
-            padding: .45rem 1.2rem; font-weight: 700;
-            cursor: pointer; text-decoration: none; display: inline-block;
-            transition: background .2s;
+            background: linear-gradient(135deg, var(--grad-b), color-mix(in srgb, var(--grad-b) 70%, #fff));
+            color: #08170F; border: none; font-weight: 700;
         }
-        .btn-erp-gold:hover { background: var(--clr-amber); }
         .btn-erp-danger {
-            background: var(--clr-danger); color: #FFF; border: none;
-            border-radius: 8px; padding: .4rem 1rem;
-            font-weight: 600; font-size: .85rem;
-            cursor: pointer; text-decoration: none; display: inline-block;
+            background: linear-gradient(135deg, var(--clr-danger), #8E1B2F);
+            color: #FFF; border: none;
         }
-        .btn-erp-sm { padding: .25rem .7rem; font-size: .8rem; }
-        /* FORMULARIOS */
+        .btn-erp-primary:hover, .btn-erp-gold:hover, .btn-erp-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px var(--clr-glow);
+            filter: brightness(1.1); color: #FFF;
+        }
+        .btn-erp-gold:hover { color: #08170F; }
+        .btn-erp-sm { padding: .28rem .85rem; font-size: .8rem; }
+
+        /* ═══════════ FORMULARIOS ═══════════ */
         .erp-label {
-            font-size: .83rem; font-weight: 600; color: var(--clr-muted);
-            text-transform: uppercase; letter-spacing: .05em;
+            font-size: .8rem; font-weight: 600; color: var(--clr-muted);
+            text-transform: uppercase; letter-spacing: .06em;
             display: block; margin-bottom: .3rem;
         }
         .erp-input {
-            background: var(--clr-surface); border: 1.5px solid var(--clr-border);
-            border-radius: 8px; color: var(--clr-text);
-            padding: .5rem .85rem; width: 100%; font-size: .93rem;
-            transition: border-color .2s, box-shadow .2s;
+            background: rgba(0,0,0,.30);
+            border: 1.5px solid var(--clr-border);
+            border-radius: 12px; color: var(--clr-text);
+            padding: .55rem .9rem; width: 100%; font-size: .93rem;
+            transition: border-color .2s, box-shadow .2s, background .2s;
         }
         .erp-input:focus {
-            outline: none; border-color: var(--clr-sky);
-            box-shadow: 0 0 0 3px rgba(74,144,217,.18);
+            outline: none; background: rgba(0,0,0,.42);
+            border-color: var(--grad-b);
+            box-shadow: 0 0 0 4px var(--clr-glow);
         }
-        /* BADGES */
+
+        /* ═══════════ BADGES ═══════════ */
         .badge-erp-active {
-            background: rgba(26,122,74,.12); color: var(--clr-ok);
-            border: 1px solid currentColor;
-            font-size: .75rem; padding: .2rem .6rem;
-            border-radius: 20px; font-weight: 600;
+            background: rgba(95,211,141,.14); color: var(--clr-ok);
+            border: 1px solid currentColor; font-size: .75rem;
+            padding: .22rem .7rem; border-radius: 999px; font-weight: 600;
         }
         .badge-erp-inactive {
-            background: rgba(192,57,43,.1); color: var(--clr-danger);
-            border: 1px solid currentColor;
-            font-size: .75rem; padding: .2rem .6rem; border-radius: 20px;
+            background: rgba(224,70,86,.14); color: var(--clr-danger);
+            border: 1px solid currentColor; font-size: .75rem;
+            padding: .22rem .7rem; border-radius: 999px;
         }
         .badge-erp-gold {
             background: var(--clr-cream); color: var(--clr-gold);
-            border: 1px solid var(--clr-gold);
-            font-size: .75rem; padding: .2rem .7rem;
-            border-radius: 20px; font-weight: 700;
+            border: 1px solid var(--grad-b); font-size: .75rem;
+            padding: .22rem .8rem; border-radius: 999px; font-weight: 700;
+            box-shadow: 0 0 10px var(--clr-glow);
         }
-        /* ALERTAS */
-        .erp-alert-danger {
-            background: rgba(192,57,43,.08); border: 1px solid rgba(192,57,43,.3);
-            border-left: 5px solid var(--clr-danger); border-radius: 8px;
-            padding: 1rem 1.25rem;
+
+        /* ═══════════ ALERTAS ═══════════ */
+        .erp-alert-danger, .erp-alert-info, .erp-alert-success {
+            backdrop-filter: blur(8px);
+            border-radius: 14px; padding: 1rem 1.25rem;
+            border: 1px solid var(--clr-border);
         }
-        .erp-alert-info {
-            background: var(--clr-ice); border: 1px solid var(--clr-border);
-            border-left: 5px solid var(--clr-sky); border-radius: 8px;
-            padding: 1rem 1.25rem;
-        }
-        .erp-alert-success {
-            background: rgba(26,122,74,.08); border: 1px solid rgba(26,122,74,.3);
-            border-left: 5px solid var(--clr-ok); border-radius: 8px;
-            padding: 1rem 1.25rem;
-        }
-        /* TÍTULO DE PÁGINA */
+        .erp-alert-danger  { background: rgba(224,70,86,.14);  border-left: 5px solid var(--clr-danger); }
+        .erp-alert-info    { background: var(--clr-surface);   border-left: 5px solid var(--grad-b); }
+        .erp-alert-success { background: rgba(95,211,141,.14); border-left: 5px solid var(--clr-ok); }
+
+        /* ═══════════ TÍTULO DE PÁGINA ═══════════ */
         .erp-page-title {
             display: flex; align-items: center; gap: 1rem;
             margin-bottom: 1.5rem; padding-bottom: .75rem;
-            border-bottom: 2px solid var(--clr-border);
+            border-bottom: 4px solid transparent;
+            border-image: var(--rayas) 1;
         }
         .erp-page-title h2 {
             font-family: 'Playfair Display',serif;
-            font-size: 1.6rem; color: var(--clr-navy); margin: 0;
+            font-size: 1.7rem; margin: 0; color: var(--clr-gold);
+            text-shadow: 0 0 18px var(--clr-glow);
         }
-        [data-theme="dark"] .erp-page-title h2,
-        [data-theme="halloween"] .erp-page-title h2 { color: var(--clr-sky); }
-        /* CÓDIGO */
+
+        /* ═══════════ CÓDIGO Y ENLACES ═══════════ */
         code, .mono {
             font-family: 'JetBrains Mono',Consolas,monospace;
-            font-size: .85em; color: var(--clr-royal);
-            background: var(--clr-ice); padding: .1em .4em; border-radius: 4px;
+            font-size: .85em; color: var(--clr-sky);
+            background: rgba(255,255,255,.08);
+            padding: .1em .45em; border-radius: 6px;
         }
-        [data-theme="dark"] code,
-        [data-theme="dark"] .mono {
-            color: var(--clr-sky); background: rgba(74,144,217,.12);
-        }
-        [data-theme="halloween"] code,
-        [data-theme="halloween"] .mono {
-            color: var(--clr-sky); background: rgba(255,117,24,.12);
-        }
-        /* FOOTER */
+        a[style*="clr-royal"] { color: var(--clr-sky) !important; }
+        a[style*="clr-royal"]:hover { color: var(--clr-gold) !important; }
+
+        /* ═══════════ FOOTER + CONTADOR ═══════════ */
         .erp-footer {
-            background: var(--clr-navy); color: rgba(255,255,255,.6);
-            text-align: center; font-size: .78rem;
-            padding: .75rem; border-top: 2px solid var(--clr-gold);
+            position: relative;
+            background: var(--nav-bg);
+            backdrop-filter: blur(12px);
+            color: rgba(255,255,255,.78);
+            text-align: center; padding: .9rem 1rem .8rem;
+            border-top: 4px solid transparent;
+            border-image: var(--rayas) 1;
         }
-        /* EXTRAS HALLOWEEN */
-        [data-theme="halloween"] .erp-navbar {
-            background: linear-gradient(90deg, #1A1A1A 0%, #2B1240 100%);
+        .cuenta { display: flex; flex-direction: column; align-items: center; gap: .45rem; }
+        .cuenta-tit {
+            font-family: 'Playfair Display',serif; font-size: 1rem;
+            color: var(--clr-gold); letter-spacing: .04em;
         }
-        [data-theme="halloween"] .erp-brand {
-            text-shadow: 0 0 10px rgba(255,117,24,.55);
+        .cuenta-cajas { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; }
+        .cc {
+            background: rgba(0,0,0,.38);
+            border: 1px solid var(--clr-border);
+            border-radius: 12px; padding: .3rem .8rem; min-width: 68px;
+            box-shadow: 0 0 14px rgba(0,0,0,.35), inset 0 0 12px var(--clr-cream);
         }
-        [data-theme="halloween"] .erp-card:hover {
-            border-color: var(--clr-gold);
-            box-shadow: 0 0 18px rgba(255,117,24,.35);
+        .cc b {
+            display: block; font-family: 'Playfair Display',serif;
+            font-size: 1.5rem; line-height: 1.15; color: var(--clr-gold);
+            text-shadow: 0 0 12px var(--clr-glow);
+            font-variant-numeric: tabular-nums;
         }
-        [data-theme="halloween"] .erp-footer {
-            background: linear-gradient(90deg, #2B1240 0%, #1A1A1A 100%);
+        .cc small { text-transform: uppercase; letter-spacing: .1em; font-size: .62rem; color: var(--clr-muted); }
+        .cuenta-feliz {
+            display: none; font-family: 'Playfair Display',serif;
+            font-size: 1.5rem; color: var(--clr-gold); text-shadow: 0 0 16px var(--clr-glow);
+        }
+        .footer-txt { margin-top: .5rem; font-size: .76rem; color: rgba(255,255,255,.6); }
+
+        :focus-visible { outline: 3px solid var(--grad-b); outline-offset: 2px; }
+
+        /* ═══════════ SANTA (abajo a la derecha) ═══════════ */
+        .santa-w {
+            position: fixed; right: 12px; bottom: 0; z-index: 900;
+            width: 128px; cursor: pointer;
+        }
+        .santa-svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 0 12px rgba(255,200,120,.22)); transition: transform .2s; }
+        .santa-w:hover .santa-svg { transform: scale(1.04); }
+        .santa-w.salta .santa-svg { animation: santaSalta .5s ease; }
+        @keyframes santaSalta { 0%,100% { transform: translateY(0); } 40% { transform: translateY(-18px) rotate(-3deg); } }
+        .brazo-saluda { transform-origin: 98px 70px; animation: saluda 1.1s ease-in-out infinite; }
+        @keyframes saluda { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(-20deg); } }
+        .santa-burbuja {
+            position: absolute; right: 8px; bottom: calc(100% - 6px);
+            background: #FFF; color: #0B1F14;
+            border-radius: 14px; padding: .45rem .75rem;
+            font-size: .78rem; font-weight: 600; line-height: 1.3;
+            width: max-content; max-width: 200px;
+            box-shadow: 0 6px 20px rgba(0,0,0,.45);
+            opacity: 0; transform: translateY(6px) scale(.95);
+            transition: opacity .3s, transform .3s; pointer-events: none;
+        }
+        .santa-burbuja::after {
+            content: ""; position: absolute; right: 34px; bottom: -7px;
+            border: 8px solid transparent; border-top-color: #FFF; border-bottom: 0;
+        }
+        .santa-burbuja.ver { opacity: 1; transform: none; }
+
+        /* ═══════════ ARBOLITO (se puede tocar) ═══════════ */
+        .arbolito { position: fixed; right: 148px; bottom: 0; z-index: 900; width: 76px; cursor: pointer; }
+        .arbolito svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 0 10px rgba(255,210,120,.3)); transition: transform .2s; }
+        .arbolito:hover svg { transform: scale(1.06); }
+        .estrella-arb { animation: brilloEstrella 2.4s ease-in-out infinite; transform-origin: 45px 8px; }
+        @keyframes brilloEstrella { 0%,100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+
+        /* ═══════════ CAJA DE MÚSICA (abajo a la izquierda) ═══════════ */
+        .caja-w {
+            position: fixed; left: 14px; bottom: 0; z-index: 900;
+            width: 150px; display: flex; flex-direction: column; align-items: flex-start;
+        }
+        .caja-cap {
+            font-size: .72rem; font-weight: 600; color: var(--clr-text);
+            background: rgba(0,0,0,.55); border: 1px solid var(--clr-border);
+            border-radius: 999px; padding: .15rem .65rem; margin-bottom: 2px;
+            backdrop-filter: blur(6px);
+        }
+        .caja-btn {
+            background: none; border: 0; padding: 0; cursor: pointer; width: 150px;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,.5));
+            transition: transform .2s, filter .3s;
+        }
+        .caja-btn:hover { transform: translateY(-3px) scale(1.04); }
+        .caja-btn svg { width: 100%; height: auto; display: block; }
+        .caja-btn.sonando { filter: drop-shadow(0 0 16px rgba(240,196,90,.75)); }
+        .bailarina { transform-origin: 75px 40px; }
+        .manivela  { transform-origin: 134px 92px; }
+        .caja-btn.sonando .bailarina { animation: giraBaila 1.8s linear infinite; }
+        .caja-btn.sonando .manivela  { animation: gira360 1.6s linear infinite; }
+        @keyframes giraBaila { 0% { transform: scaleX(1); } 50% { transform: scaleX(-1); } 100% { transform: scaleX(1); } }
+        @keyframes gira360 { to { transform: rotate(360deg); } }
+        .nota-flot {
+            position: fixed; z-index: 950; pointer-events: none;
+            font-size: 1.3rem; color: var(--clr-gold);
+            text-shadow: 0 0 10px var(--clr-glow);
+        }
+
+        /* ═══════════ NIEVE (3 capas con profundidad) + FUEGOS ARTIFICIALES ═══════════ */
+        #nieve {
+            position: fixed; inset: 0; width: 100%; height: 100%;
+            z-index: 1500; pointer-events: none;
+        }
+        #fuegos {
+            position: fixed; inset: 0; width: 100%; height: 100%;
+            z-index: 1700; pointer-events: none;
+        }
+
+        /* Barra de progreso de scroll (bastón de caramelo) */
+        .barra-scroll {
+            position: fixed; left: 0; bottom: 0; height: 5px; width: 100%;
+            z-index: 1600; pointer-events: none;
+            transform: scaleX(0); transform-origin: 0 50%;
+            background: var(--rayas);
+            box-shadow: 0 0 12px var(--clr-glow);
+        }
+
+        /* Botón de subir */
+        .subir {
+            position: fixed; left: 50%; bottom: 18px; z-index: 950;
+            width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--grad-b);
+            background: linear-gradient(135deg, var(--grad-a), color-mix(in srgb, var(--grad-a) 50%, #000));
+            color: #FFF; font-size: 1.1rem; cursor: pointer;
+            box-shadow: 0 0 16px var(--clr-glow);
+            opacity: 0; pointer-events: none; transform: translate(-50%, 14px);
+            transition: opacity .3s, transform .3s;
+        }
+        .subir.ver { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+        .subir:hover { filter: brightness(1.2); }
+
+        /* ══════════════════════════════════════════════════════════════
+           EXTRAS INTERACTIVOS (aurora, estrella, regalo, campanitas)
+           ══════════════════════════════════════════════════════════════ */
+        .nx-aurora {
+            position: absolute; inset: 0 0 auto 0; height: 62%;
+            pointer-events: none; overflow: hidden; opacity: .45; mix-blend-mode: screen;
+            transition: opacity 1.2s;
+        }
+        body.fiesta .nx-aurora, body.locura .nx-aurora { opacity: .9; }
+        .nx-aurora i {
+            position: absolute; top: 0; width: 55%; height: 100%;
+            filter: blur(55px); animation: nx-onda 16s ease-in-out infinite alternate;
+        }
+        .nx-aurora i:nth-child(1) { left: -8%; background: linear-gradient(180deg, transparent 5%, var(--au1) 55%, transparent 95%); }
+        .nx-aurora i:nth-child(2) { left: 28%; background: linear-gradient(180deg, transparent 5%, var(--au2) 55%, transparent 95%); animation-duration: 20s; animation-delay: -6s; }
+        .nx-aurora i:nth-child(3) { left: 58%; background: linear-gradient(180deg, transparent 5%, var(--au3) 55%, transparent 95%); animation-duration: 24s; animation-delay: -11s; opacity: .55; }
+        @keyframes nx-onda {
+            from { transform: translateX(-7%) skewX(-9deg) scaleY(.85); }
+            to   { transform: translateX(9%) skewX(11deg) scaleY(1.12); }
+        }
+
+        .nx-estrella {
+            position: fixed; top: 0; left: 0; width: 140px; height: 4px; z-index: 1650;
+            opacity: 0; pointer-events: none; cursor: pointer; transform-origin: 100% 50%;
+        }
+        .nx-estrella::before {
+            content: ""; position: absolute; inset: 0; border-radius: 4px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.9) 85%, #FFF);
+            filter: drop-shadow(0 0 6px #FFF) drop-shadow(0 0 12px #7DF9FF);
+        }
+        .nx-estrella::after { content: ""; position: absolute; inset: -16px -6px -16px -20px; }
+        .nx-estrella.vuela { pointer-events: auto; }
+
+        .nx-regalo {
+            position: fixed; top: 120px; left: 50%; width: 130px; z-index: 1800;
+            opacity: 0; pointer-events: none; cursor: pointer; text-align: center;
+            transform: translate(-50%, -24px) scale(.85);
+            transition: opacity .35s, transform .45s cubic-bezier(.34, 1.56, .64, 1);
+        }
+        .nx-regalo.visible { opacity: 1; pointer-events: auto; transform: translate(-50%, 0) scale(1); }
+        .nx-regalo svg {
+            display: block; width: 100%; height: auto; overflow: visible;
+            filter: drop-shadow(0 0 14px rgba(255,46,99,.8));
+            animation: nx-rebota 1.2s ease-in-out infinite;
+        }
+        .nx-regalo.abierto svg { animation: none; }
+        @keyframes nx-rebota { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
+        .nx-tapa {
+            transform-box: fill-box; transform-origin: 50% 100%;
+            transition: transform .6s cubic-bezier(.34, 1.56, .64, 1), opacity .5s .2s;
+        }
+        .nx-regalo.abierto .nx-tapa { transform: translate(-10px, -46px) rotate(-26deg); opacity: 0; }
+        .nx-regalo-pista, .nx-regalo-texto {
+            position: absolute; top: calc(100% + 6px); left: 50%;
+            width: max-content; max-width: min(340px, 90vw);
+            padding: .5rem .95rem; border-radius: 12px;
+            background: #0B1F17; color: #F8FFF9; font-size: .88rem; font-weight: 600;
+            transform: translateX(-50%); pointer-events: none;
+        }
+        .nx-regalo-pista { border: 2px solid #FFE600; box-shadow: 0 0 14px rgba(255,230,0,.55); transition: opacity .25s; }
+        .nx-regalo.abierto .nx-regalo-pista { opacity: 0; }
+        .nx-regalo-texto {
+            border: 2px solid #2BFF88; box-shadow: 0 0 18px rgba(43,255,136,.6);
+            opacity: 0; transform: translateX(-50%) translateY(-6px);
+            transition: opacity .4s .25s, transform .4s .25s;
+        }
+        .nx-regalo.abierto .nx-regalo-texto { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        .nx-toast {
+            position: fixed; top: 160px; left: 50%; z-index: 1800;
+            max-width: 90vw; text-align: center;
+            padding: .6rem 1.1rem; border-radius: 999px;
+            background: #0B1F17; color: #F8FFF9; font-size: .9rem; font-weight: 600;
+            border: 2px solid #00F0FF; box-shadow: 0 0 18px rgba(0,240,255,.6);
+            opacity: 0; pointer-events: none; transform: translate(-50%, -10px);
+            transition: opacity .3s, transform .3s;
+        }
+        .nx-toast.visible { opacity: 1; transform: translate(-50%, 0); }
+
+        /* Cartel grande del código secreto */
+        .nx-cartel {
+            position: fixed; top: 38%; left: 50%; z-index: 1850; pointer-events: none;
+            font-family: 'Playfair Display', serif; font-weight: 700; text-align: center;
+            font-size: clamp(1.8rem, 6vw, 4rem); line-height: 1.1; color: #FFF;
+            text-shadow: 0 0 20px var(--grad-b), 0 0 50px var(--grad-a), 0 4px 0 rgba(0,0,0,.4);
+            opacity: 0; transform: translate(-50%, -50%) scale(.6);
+        }
+        .nx-cartel small { display: block; margin-top: .6rem; font: 600 .95rem 'Inter', sans-serif; letter-spacing: .1em; color: var(--clr-gold); text-transform: uppercase; }
+        .nx-cartel.ver { animation: cartel 4.2s ease forwards; }
+        @keyframes cartel {
+            0%   { opacity: 0; transform: translate(-50%, -50%) scale(.6); }
+            12%  { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+            20%  { transform: translate(-50%, -50%) scale(1); }
+            80%  { opacity: 1; }
+            100% { opacity: 0; transform: translate(-50%, -62%) scale(1); }
+        }
+
+        .nx-sonido {
+            position: fixed; top: 128px; right: 38px; z-index: 1650;
+            width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+            border: 2px solid #FFE600; background: rgba(11,31,23,.85); color: #FFE600;
+            font-size: 1rem; opacity: .7; box-shadow: 0 0 10px rgba(255,230,0,.5);
+            transition: opacity .2s, transform .2s, background .2s;
+        }
+        .nx-sonido:hover { opacity: 1; transform: scale(1.08); }
+        .nx-sonido[aria-pressed="true"] { opacity: 1; background: #FFE600; color: #0B1F17; }
+
+        .nx-part { position: fixed; z-index: 1900; pointer-events: none; will-change: transform, opacity; }
+        .nx-conf { width: 8px; height: 12px; border-radius: 2px; }
+
+        /* ═══════════ MOÑO EN LAS TARJETAS (Navidad e Invierno) ═══════════ */
+        [data-theme="navidad"] .erp-card::after,
+        [data-theme="invierno"] .erp-card::after {
+            content: ""; position: absolute; top: 8px; right: 12px;
+            width: 38px; height: 28px; pointer-events: none; z-index: 2;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 46 34'%3E%3Cpath d='M23 17 C10 -2 -4 6 6 20 C12 28 20 22 23 17Z' fill='%23FFE14D'/%3E%3Cpath d='M23 17 C36 -2 50 6 40 20 C34 28 26 22 23 17Z' fill='%23FFE14D'/%3E%3Cpath d='M23 18 L12 33 M23 18 L34 33' stroke='%23FFE14D' stroke-width='4' stroke-linecap='round'/%3E%3Ccircle cx='23' cy='17' r='5' fill='%23D6384B'/%3E%3C/svg%3E") center / contain no-repeat;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,.45));
+        }
+        /* Etiqueta para productos con poco stock: <span class="badge-regalo-poco">¡Casi agotado!</span> */
+        .badge-regalo-poco {
+            display: inline-block; font-size: .75rem; font-weight: 700;
+            padding: .2rem .75rem; border-radius: 999px;
+            background: rgba(224,70,86,.16); color: var(--clr-danger);
+            border: 1px dashed currentColor;
+        }
+        .badge-regalo-poco::before { content: "🎁 "; }
+
+        /* ═══════════ HALLOWEEN (solo aparece en su fecha, modo automático) ═══════════ */
+        .hallo-decor { display: none; }
+        [data-theme="halloween"] .hallo-decor { display: block; }
+        .hd-calabaza {
+            position: fixed; left: 16px; bottom: 8px; z-index: 900;
+            font-size: 72px; line-height: 1; cursor: pointer;
+            filter: drop-shadow(0 0 18px rgba(255,138,31,.85));
+            animation: hd-bob 3s ease-in-out infinite;
+        }
+        .hd-fantasma {
+            position: fixed; right: 22px; bottom: 18px; z-index: 900;
+            font-size: 62px; line-height: 1; opacity: .92; pointer-events: none;
+            filter: drop-shadow(0 0 14px rgba(190,150,255,.7));
+            animation: hd-flota 4s ease-in-out infinite;
+        }
+        .hd-murcielago {
+            position: fixed; top: 20%; left: 0; z-index: 900; pointer-events: none;
+            font-size: 34px; line-height: 1; animation: hd-vuela 14s linear infinite;
+        }
+        .hd-murcielago.m2 { top: 36%; animation-delay: -5s; font-size: 28px; animation-duration: 17s; }
+        .hd-murcielago.m3 { top: 12%; animation-delay: -9s; font-size: 40px; animation-duration: 20s; }
+        @keyframes hd-bob   { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-8px) rotate(3deg); } }
+        @keyframes hd-flota { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
+        @keyframes hd-vuela {
+            0%   { transform: translate(-80px, 0) rotate(-6deg); }
+            25%  { transform: translate(28vw, -30px) rotate(6deg); }
+            50%  { transform: translate(56vw, 20px) rotate(-6deg); }
+            75%  { transform: translate(84vw, -20px) rotate(6deg); }
+            100% { transform: translate(112vw, 10px) rotate(0deg); }
+        }
+        [data-theme="halloween"] .luna {
+            background: radial-gradient(circle at 30% 30%, #FFE7B8 0%, #FF9A3C 55%, #C9500F 100%);
+            box-shadow: 0 0 50px 14px rgba(255,140,40,.45), 0 0 130px 45px rgba(255,120,30,.20);
+        }
+        [data-theme="halloween"] .erp-navbar::before {
+            background:
+                radial-gradient(circle at 14px 12px, #FF8A1F 0 4px, transparent 5px) 0 0 / 56px 20px repeat-x,
+                radial-gradient(circle at 42px 12px, #A855F7 0 4px, transparent 5px) 0 0 / 56px 20px repeat-x;
+            filter: drop-shadow(0 0 5px rgba(255,138,31,.85));
+        }
+        [data-theme="halloween"] .erp-navbar::after {
+            background: radial-gradient(circle at 28px 12px, #9AE62E 0 4px, transparent 5px) 0 0 / 56px 20px repeat-x;
+            filter: drop-shadow(0 0 5px rgba(154,230,46,.85));
+        }
+
+        /* ═══════════ BOTÓN PARA QUITAR LA NIEVE ═══════════ */
+        .nx-nieve {
+            position: fixed; top: 128px; right: 82px; z-index: 1650;
+            width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+            border: 2px solid #7DF9FF; background: rgba(11,31,23,.85); color: #FFF;
+            font-size: 1rem; box-shadow: 0 0 10px rgba(125,249,255,.5);
+            transition: transform .2s, opacity .2s;
+        }
+        .nx-nieve:hover { transform: scale(1.08); }
+        .nx-nieve[aria-pressed="true"] { opacity: .7; border-color: #FF4D5E; box-shadow: 0 0 10px rgba(255,77,94,.5); }
+        .nx-nieve[aria-pressed="true"]::after {
+            content: ""; position: absolute; left: 5px; right: 5px; top: 50%; height: 3px;
+            background: #FF4D5E; border-radius: 2px; transform: rotate(-45deg);
+        }
+        [data-sinnieve] #nieve { display: none !important; }
+
+        /* ═══════════ SANTA GIGANTE ═══════════ */
+        .santa-gigante {
+            position: fixed; left: 180px; bottom: 0; z-index: -1;   /* DETRÁS del contenido */
+            width: 270px; pointer-events: none;
+        }
+        .santa-gigante .santa-svg { transform-origin: 50% 100%; }
+        .santa-gigante.salta .santa-svg { animation: santaSalta .5s ease; }
+
+        /* Código secreto: los dos Santas bailan y saludan más rápido */
+        @keyframes santaBaila {
+            0%,100% { transform: rotate(-5deg) translateY(0); }
+            25%     { transform: rotate(5deg)  translateY(-22px); }
+            50%     { transform: rotate(-5deg) translateY(0); }
+            75%     { transform: rotate(5deg)  translateY(-22px); }
+        }
+        body.fiesta .santa-gigante .santa-svg,
+        body.fiesta .santa-w .santa-svg,
+        body.locura .santa-gigante .santa-svg,
+        body.locura .santa-w .santa-svg {
+            transform-origin: 50% 100%;
+            animation: santaBaila .7s ease-in-out infinite;
+        }
+        body.fiesta .brazo-saluda, body.locura .brazo-saluda { animation-duration: .3s; }
+
+        /* ═══════════ VILLA PEQUEÑA CON GENTE CAMINANDO ═══════════ */
+        .villa {
+            position: fixed; left: 0; right: 0; bottom: 0; height: 70px;
+            z-index: -1; pointer-events: none; overflow: hidden;   /* DETRÁS del contenido */
+        }
+        .villa-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+        .pj {
+            position: absolute; bottom: 5px; left: 0;
+            animation: camina var(--d, 40s) linear infinite;
+            animation-delay: var(--dl, 0s);
+            will-change: transform;
+        }
+        .pj.inv { animation-direction: reverse; }
+        .pj svg { width: 22px; height: 52px; display: block; overflow: visible; }
+        .pj.inv svg { transform: scaleX(-1); }
+        @keyframes camina {
+            from { transform: translateX(-70px); }
+            to   { transform: translateX(calc(100vw + 70px)); }
+        }
+        .pj .pierna, .pj .brazo { transform-box: fill-box; transform-origin: 50% 0%; animation: paso .8s ease-in-out infinite alternate; }
+        .pj .pierna.b, .pj .brazo.a { animation-direction: alternate-reverse; }
+        @keyframes paso { from { transform: rotate(28deg); } to { transform: rotate(-28deg); } }
+        @keyframes brinco { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        body.fiesta .pj .cuerpo, body.locura .pj .cuerpo { animation: brinco .3s ease-in-out infinite; }
+
+        /* ═══════════ CONTADOR EN LA NAVBAR ═══════════ */
+        .cuenta-nav { flex-direction: row; align-items: center; gap: .6rem; }
+        .cuenta-nav .cuenta-tit { font-size: .82rem; white-space: nowrap; }
+        .cuenta-nav .cuenta-cajas { flex-wrap: nowrap; gap: .3rem; }
+        .cuenta-nav .cc { min-width: 46px; padding: .05rem .45rem; border-radius: 10px; text-align: center; }
+        .cuenta-nav .cc b { font-size: 1.05rem; }
+        .cuenta-nav .cc small { font-size: .5rem; }
+        .cuenta-nav .cuenta-feliz { font-size: 1.05rem; }
+        @media (max-width: 1400px) { .cuenta-nav .cuenta-tit { display: none; } }
+        @media (max-width: 900px)  { .cuenta-nav { order: 3; width: 100%; justify-content: center; } }
+
+        /* ═══════════ MODO LOCURA (escribe 67) ═══════════ */
+        .locura-wrap { position: fixed; inset: 0; z-index: 1690; pointer-events: none; overflow: hidden; display: none; }
+        .locura-wrap.on { display: block; }
+        .locura-wrap.salida { animation: salida67 .6s ease forwards; }
+        @keyframes salida67 { to { opacity: 0; transform: scale(1.12); } }
+
+        .locura-flash {
+            position: absolute; inset: -60%; opacity: .32; mix-blend-mode: screen;
+            background: conic-gradient(from 0deg at 50% 60%, #FF2E63, #FF9F1C, #FFE600, #2BFF88, #00F0FF, #7A5CFF, #FF3DF2, #FF2E63);
+            animation: locuraGira 1.6s linear infinite;
+        }
+        @keyframes locuraGira { to { transform: rotate(360deg); } }
+
+        .locura-67txt {
+            position: absolute; left: 50%; top: 44%;
+            font: 900 min(52vw, 640px)/1 'Playfair Display', serif;
+            background: linear-gradient(90deg, #FF2E63, #FFE600, #2BFF88, #00F0FF, #FF3DF2, #FF2E63);
+            background-size: 300% auto;
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+            opacity: .55; transform: translate(-50%, -50%);
+            animation: pulso67 .35s ease-in-out infinite alternate, rainbowTxt 1.4s linear infinite;
+        }
+        @keyframes pulso67 {
+            from { transform: translate(-50%, -50%) scale(.88) rotate(-4deg); }
+            to   { transform: translate(-50%, -50%) scale(1.12) rotate(4deg); }
+        }
+        @keyframes rainbowTxt { to { background-position: 300% center; } }
+
+        .locura-santas {
+            position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+            display: flex; align-items: flex-end; gap: 2vw;
+        }
+        .locura-wrap.on .locura-santas { animation: entra67 .7s cubic-bezier(.34, 1.56, .64, 1) both; }
+        @keyframes entra67 { from { transform: translate(-50%, 110%); } to { transform: translate(-50%, 0); } }
+
+        .s67 {
+            height: min(72vh, 620px); width: auto; display: block; overflow: visible;
+            transform-origin: 50% 100%;
+            animation: sway67 .3s ease-in-out infinite alternate, locuraSantaHue 2s linear infinite;
+        }
+        .s67.lado { height: min(46vh, 380px); animation-direction: alternate-reverse, normal; animation-delay: 0s, -.8s; }
+        .s67.lado.b { animation-delay: 0s, -1.4s; animation-direction: alternate, normal; }
+        @keyframes sway67 {
+            from { transform: rotate(-4deg) translateY(0); }
+            to   { transform: rotate(4deg)  translateY(-16px); }
+        }
+        @keyframes locuraSantaHue {
+            from { filter: drop-shadow(0 0 22px rgba(255,255,255,.7)) hue-rotate(0deg); }
+            to   { filter: drop-shadow(0 0 22px rgba(255,255,255,.7)) hue-rotate(360deg); }
+        }
+        .b67.l { animation: b67a .34s ease-in-out infinite alternate; }
+        .b67.r { animation: b67a .34s ease-in-out infinite alternate-reverse; }
+        @keyframes b67a { from { transform: translateY(-34px); } to { transform: translateY(34px); } }
+        .pupila { animation: ojos67 .25s ease-in-out infinite alternate; }
+        @keyframes ojos67 { from { transform: translate(-3px, -2px); } to { transform: translate(3px, 2px); } }
+
+        /* La página entera se vuelve loca */
+        body.locura .erp-main { animation: locuraShake .12s linear infinite, locuraHue 1.2s linear infinite; }
+        body.locura .erp-navbar { animation: locuraHue 1.2s linear infinite reverse; }
+        body.locura #cielo { animation: locuraHue 1.6s linear infinite; }
+        @keyframes locuraShake {
+            0%   { transform: translate(2px, 1px)   rotate(.2deg); }
+            25%  { transform: translate(-2px, -2px) rotate(-.3deg); }
+            50%  { transform: translate(-1px, 2px)  rotate(.3deg); }
+            75%  { transform: translate(2px, -1px)  rotate(-.2deg); }
+            100% { transform: translate(-2px, 1px)  rotate(.2deg); }
+        }
+        @keyframes locuraHue { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
+        body.locura .erp-card { animation: locuraCard .5s ease-in-out infinite alternate; }
+        body.locura .erp-card:nth-child(even) { animation-direction: alternate-reverse; }
+        @keyframes locuraCard {
+            from { transform: rotate(-3deg) scale(.97); }
+            to   { transform: rotate(3deg)  scale(1.04); }
+        }
+        /* La villa y el Santa gigante salen al frente y se vuelven locos */
+        body.locura .villa, body.locura .santa-gigante { z-index: 1600 !important; }
+        body.locura .pj:not(.extra) { animation-duration: 5s; }
+        .pj.extra svg { width: 26px; height: 62px; }
+
+        /* ═══════════ QUÉ SE OCULTA EN CADA TEMA ═══════════ */
+        [data-theme="halloween"] :is(.paisaje, .luces-lado, .guirnalda, .santa-w, .arbolito, .caja-w, .trineo-sombra, #nieve, .nx-regalo, .santa-gigante, .nx-nieve),
+        [data-theme="normal"] :is(.paisaje, .luces-lado, .guirnalda, .santa-w, .arbolito, .caja-w, .trineo-sombra, #nieve,
+                                  #estrellas, .luna, .fugaz, .nx-aurora, .nx-regalo, .nx-estrella, .nx-sonido, .nx-toast, .hallo-decor,
+                                  #fuegos, .barra-scroll, .nx-cartel, .santa-gigante, .nx-nieve, .villa) {
+            display: none !important;
+        }
+        [data-theme="normal"] .erp-navbar { padding-top: .8rem; }
+        [data-theme="normal"] .erp-navbar::before,
+        [data-theme="normal"] .erp-navbar::after { display: none; }
+        [data-theme="normal"] .erp-main .container { animation: none; }
+        [data-theme="normal"] .erp-input { background: #FFFFFF; color: var(--clr-text); }
+        [data-theme="normal"] .erp-input:focus { background: #FFFFFF; }
+        [data-theme="normal"] code, [data-theme="normal"] .mono { background: rgba(10,35,66,.07); }
+        [data-theme="normal"] .erp-brillo { display: none; }
+
+        /* ═══════════ RENDIMIENTO: modo ligero ═══════════ */
+        [data-lite] .nx-aurora,
+        [data-lite] .trineo-sombra,
+        [data-lite] .humo,
+        [data-lite] .fugaz,
+        [data-lite] .luces-lado { display: none !important; }
+        [data-lite] .erp-card { backdrop-filter: none; -webkit-backdrop-filter: none; }
+        [data-lite] .erp-brillo { display: none; }
+
+        @media (max-width: 1100px) { .luces-lado { display: none; } }
+        @media (max-width: 900px) {
+            .santa-w, .arbolito, .santa-gigante { display: none; }
+            .caja-w { transform: scale(.75); transform-origin: left bottom; }
+            .trineo-sombra { width: 260px; }
+            .luna { width: 64px; height: 64px; }
+            .guirnalda { display: none; }
+            .hd-fantasma { display: none; }
+            .hd-calabaza { font-size: 54px; }
+            .nx-sonido { top: auto; bottom: 90px; right: 12px; }
+            .nx-nieve { top: auto; bottom: 90px; right: 56px; }
+        }
+
+        /* "Reducir movimiento" del sistema: solo se quitan los efectos más pesados
+           (la nieve, Santa, el árbol y las luces SIGUEN funcionando) */
+        @media (prefers-reduced-motion: reduce) {
+            .trineo-sombra, .nx-aurora { display: none !important; }
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -305,9 +1066,220 @@
 
 <body>
 
+<div class="barra-scroll" id="barraScroll" aria-hidden="true"></div>
+
+<!-- ═══════════ CIELO + PAISAJE ═══════════ -->
+<div id="cielo" aria-hidden="true">
+    <div class="nx-aurora"><i></i><i></i><i></i></div>
+    <div id="estrellas"></div>
+    <div class="luna"></div>
+    <div class="fugaz"></div>
+
+    <!-- Sombra del trineo de Santa con 3 renos -->
+    <div class="trineo-sombra" id="trineoSombra">
+        <svg id="trineoSvg" viewBox="-220 0 560 120" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <symbol id="reno" viewBox="0 0 60 40">
+                    <ellipse cx="28" cy="20" rx="14" ry="7"/>
+                    <path d="M38 17 L49 8 L56 10 L55 15 L46 21 Z"/>
+                    <path d="M22 25 L12 34 M25 26 L16 38 M36 26 L47 33 M39 25 L50 36"
+                          stroke-width="2.6" stroke-linecap="round" fill="none"/>
+                    <path d="M51 8 L49 1 M49 4 L45 2 M53 8 L57 2 M55 5 L59 4"
+                          stroke-width="1.6" stroke-linecap="round" fill="none"/>
+                </symbol>
+            </defs>
+            <g fill="#01040A" stroke="#01040A" stroke-linejoin="round">
+                <path d="M92 62 L140 54 M92 66 L200 52 M92 70 L260 54" fill="none" stroke-width="1.2"/>
+                <use href="#reno" x="130" y="32" width="60" height="40"/>
+                <use href="#reno" x="190" y="28" width="60" height="40"/>
+                <use href="#reno" x="250" y="32" width="60" height="40"/>
+                <path d="M0 62 Q0 52 12 52 L68 52 Q84 52 80 38 L92 38 Q98 66 70 74 L10 74 Z" stroke-width="1.6"/>
+                <path d="M-8 84 Q40 90 98 76 Q104 72 98 70" fill="none" stroke-width="3" stroke-linecap="round"/>
+                <path d="M18 74 L18 84 M60 74 L60 82" stroke-width="2.4"/>
+                <circle cx="14" cy="42" r="14"/>
+                <rect x="32" y="40" width="22" height="14" rx="6"/>
+                <circle cx="43" cy="36" r="7.5"/>
+                <path d="M35 33 L43 15 L51 33 Z"/>
+                <circle cx="43" cy="14" r="3"/>
+                <path d="M54 44 L74 50" stroke-width="3" stroke-linecap="round"/>
+            </g>
+            <circle cx="307" cy="44" r="3.4" fill="#FF3B3B"/>
+            <circle cx="307" cy="44" r="8" fill="#FF3B3B" opacity=".3"/>
+            <circle cx="86" cy="48" r="2.6" fill="#FFE08A"/>
+            <circle cx="86" cy="48" r="8" fill="#FFE08A" opacity=".22"/>
+        </svg>
+    </div>
+
+    <!-- Paisaje detallado: montañas, pueblo, iglesia, lago congelado, muñeco de nieve, bosque -->
+    <svg class="paisaje" viewBox="0 0 1600 420" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="gNieve" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" style="stop-color:var(--nieve)"/>
+                <stop offset="1" style="stop-color:var(--nieve2)"/>
+            </linearGradient>
+            <linearGradient id="gHielo" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#9FD3F0"/>
+                <stop offset=".5" stop-color="#D8F0FF"/>
+                <stop offset="1" stop-color="#7DB8DA"/>
+            </linearGradient>
+            <linearGradient id="gMont" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" style="stop-color:var(--mont-b)"/>
+                <stop offset="1" style="stop-color:var(--mont-a)"/>
+            </linearGradient>
+
+            <!-- Casa con techo nevado, chimenea, ventanas encendidas y corona -->
+            <symbol id="casa" viewBox="0 0 100 90">
+                <rect x="68" y="8" width="9" height="24" fill="#5B3A29"/>
+                <rect x="66" y="5" width="13" height="5" rx="2" fill="#F5F7F2"/>
+                <rect x="10" y="40" width="80" height="50" fill="#6B4A34"/>
+                <path d="M10 56 H90 M10 72 H90" stroke="#58392A" stroke-width="1.2"/>
+                <polygon points="0,44 50,8 100,44" fill="#8E2B35"/>
+                <path d="M3 44 L50 11 L97 44 Q86 39 76 46 Q66 37 56 46 Q46 37 36 46 Q26 37 16 46 Q10 40 3 44 Z" fill="#F5F7F2"/>
+                <rect class="vent" x="19" y="54" width="19" height="17" rx="2" fill="#FFC86B"/>
+                <path d="M28.5 54 V71 M19 62.5 H38" stroke="#6B4A34" stroke-width="1.6"/>
+                <rect class="vent" x="62" y="54" width="19" height="17" rx="2" fill="#FFC86B" style="animation-delay:1.1s"/>
+                <path d="M71.5 54 V71 M62 62.5 H81" stroke="#6B4A34" stroke-width="1.6"/>
+                <rect x="44" y="62" width="14" height="28" rx="2" fill="#3B2416"/>
+                <circle cx="55" cy="77" r="1.2" fill="#F0C45A"/>
+                <circle cx="51" cy="58" r="5.5" fill="none" stroke="#2E8B57" stroke-width="3"/>
+                <circle cx="51" cy="63" r="2" fill="#E04656"/>
+            </symbol>
+        </defs>
+
+        <!-- Montañas con cumbres nevadas -->
+        <path d="M0 300 L120 190 L220 260 L360 130 L480 250 L600 180 L720 270 L880 120 L1020 250 L1160 170 L1300 260 L1440 150 L1600 270 L1600 420 L0 420 Z" fill="url(#gMont)"/>
+        <g fill="#EAF3FA" opacity=".92">
+            <path d="M96 214 L120 190 L146 216 L130 210 L120 222 L110 211 Z"/>
+            <path d="M330 160 L360 130 L392 163 L372 154 L360 168 L346 155 Z"/>
+            <path d="M578 200 L600 180 L624 202 L610 197 L600 208 L590 198 Z"/>
+            <path d="M846 154 L880 120 L916 156 L894 146 L880 164 L862 148 Z"/>
+            <path d="M1138 192 L1160 170 L1184 194 L1170 188 L1160 200 L1150 190 Z"/>
+            <path d="M1414 176 L1440 150 L1468 178 L1450 170 L1440 184 L1428 172 Z"/>
+        </g>
+
+        <!-- Colina trasera -->
+        <path d="M0 318 Q220 278 460 312 T900 300 T1300 308 T1600 292 L1600 420 L0 420 Z" fill="var(--colina)"/>
+        <path d="M0 318 Q220 278 460 312 T900 300 T1300 308 T1600 292" fill="none" stroke="#EAF3FA" stroke-width="3" opacity=".55"/>
+
+        <!-- Pinos lejanos -->
+        <g id="pinosLejos"></g>
+
+        <!-- Pueblo -->
+        <g id="pueblo">
+            <g fill="#DCEBF5" opacity=".9">
+                <ellipse cx="205" cy="341" rx="82" ry="10"/>
+                <ellipse cx="380" cy="343" rx="62" ry="9"/>
+                <ellipse cx="618" cy="341" rx="72" ry="10"/>
+                <ellipse cx="810" cy="345" rx="62" ry="9"/>
+                <ellipse cx="1060" cy="348" rx="75" ry="10"/>
+                <ellipse cx="1228" cy="346" rx="60" ry="9"/>
+                <ellipse cx="1442" cy="347" rx="78" ry="10"/>
+            </g>
+            <use href="#casa" x="140"  y="226" width="130" height="117"/>
+            <use href="#casa" x="330"  y="255" width="100" height="90"/>
+            <use href="#casa" x="560"  y="240" width="115" height="103.5"/>
+            <use href="#casa" x="1000" y="242" width="120" height="108"/>
+            <use href="#casa" x="1180" y="262" width="95"  height="85.5"/>
+            <use href="#casa" x="1380" y="236" width="125" height="112.5"/>
+
+            <!-- Iglesia -->
+            <g>
+                <rect x="772" y="278" width="76" height="68" fill="#7A5A44"/>
+                <rect x="800" y="222" width="20" height="58" fill="#7A5A44"/>
+                <polygon points="794,224 810,178 826,224" fill="#8E2B35"/>
+                <polygon points="796,224 810,184 824,224 818,226 810,208 802,226" fill="#F5F7F2" opacity=".9"/>
+                <path d="M810 160 V182 M803 168 H817" stroke="#F0C45A" stroke-width="2.4"/>
+                <polygon points="766,280 810,246 854,280" fill="#8E2B35"/>
+                <path d="M768 281 L810 249 L852 281 Q838 276 826 284 Q810 274 794 284 Q780 276 768 281 Z" fill="#F5F7F2"/>
+                <path class="vent" d="M784 330 V304 Q792 294 800 304 V330 Z" fill="#FFC86B"/>
+                <path class="vent" d="M820 330 V304 Q828 294 836 304 V330 Z" fill="#FFC86B" style="animation-delay:.9s"/>
+                <path class="vent" d="M803 262 V250 Q810 242 817 250 V262 Z" fill="#FFC86B" style="animation-delay:.4s"/>
+            </g>
+
+            <!-- Humo de chimeneas -->
+            <circle class="humo" cx="234"  cy="236" r="6"/>
+            <circle class="humo" cx="236"  cy="236" r="5" style="animation-delay:1.7s"/>
+            <circle class="humo" cx="232"  cy="236" r="6" style="animation-delay:3.3s"/>
+            <circle class="humo" cx="643"  cy="248" r="5" style="animation-delay:.8s"/>
+            <circle class="humo" cx="645"  cy="248" r="6" style="animation-delay:2.6s"/>
+            <circle class="humo" cx="1087" cy="250" r="6" style="animation-delay:1.2s"/>
+            <circle class="humo" cx="1089" cy="250" r="5" style="animation-delay:3s"/>
+            <circle class="humo" cx="1471" cy="245" r="6" style="animation-delay:.4s"/>
+            <circle class="humo" cx="1473" cy="245" r="6" style="animation-delay:2.2s"/>
+            <circle class="humo" cx="1249" cy="268" r="5" style="animation-delay:1.9s"/>
+            <circle class="humo" cx="402"  cy="261" r="5" style="animation-delay:2.9s"/>
+        </g>
+
+        <!-- Pinos medios -->
+        <g id="pinosMedio"></g>
+
+        <!-- Colina de nieve del frente -->
+        <path d="M0 384 Q300 348 600 380 T1200 370 T1600 378 L1600 420 L0 420 Z" fill="url(#gNieve)"/>
+        <path d="M0 384 Q300 348 600 380 T1200 370 T1600 378" fill="none" stroke="#FFFFFF" stroke-width="2.5" opacity=".7"/>
+
+        <!-- Lago congelado con reflejo -->
+        <ellipse cx="560" cy="398" rx="210" ry="14" fill="url(#gHielo)" opacity=".9"/>
+        <path d="M430 396 Q470 392 510 397 M560 402 Q610 397 660 402 M500 405 Q540 401 580 406"
+              stroke="#FFFFFF" stroke-width="1.4" fill="none" opacity=".7"/>
+        <ellipse cx="640" cy="396" rx="26" ry="3" fill="#FFF8DC" opacity=".55"/>
+
+        <!-- Pinos de frente con luces y nieve -->
+        <g id="pinosCerca"></g>
+
+        <!-- Muñeco de nieve -->
+        <g id="muneco">
+            <circle cx="1290" cy="394" r="22" fill="#F5F9FC"/>
+            <circle cx="1290" cy="364" r="16" fill="#F5F9FC"/>
+            <circle cx="1290" cy="342" r="11.5" fill="#FFFFFF"/>
+            <rect x="1276" y="332" width="28" height="4" rx="2" fill="#1B1B1B"/>
+            <rect x="1281" y="316" width="18" height="17" fill="#1B1B1B"/>
+            <rect x="1281" y="326" width="18" height="4" fill="#D6384B"/>
+            <circle cx="1285.5" cy="341" r="1.6" fill="#1B1B1B"/>
+            <circle cx="1294.5" cy="341" r="1.6" fill="#1B1B1B"/>
+            <polygon points="1290,344 1304,347 1290,349" fill="#FF8A3D"/>
+            <rect x="1276" y="351" width="28" height="6" rx="3" fill="#D6384B"/>
+            <rect x="1296" y="353" width="6" height="14" rx="2" fill="#D6384B"/>
+            <circle cx="1290" cy="364" r="1.8" fill="#1B1B1B"/>
+            <circle cx="1290" cy="372" r="1.8" fill="#1B1B1B"/>
+            <circle cx="1290" cy="380" r="1.8" fill="#1B1B1B"/>
+            <path d="M1274 362 L1254 350 M1306 362 L1326 350 M1254 350 L1248 344 M1254 350 L1250 355"
+                  stroke="#5A3A24" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+        </g>
+
+        <!-- Faroles -->
+        <g>
+            <rect x="418" y="338" width="4" height="62" fill="#262626"/>
+            <circle class="farol-g" cx="420" cy="334" r="22" fill="#FFE08A" opacity=".2"/>
+            <circle cx="420" cy="334" r="6" fill="#FFE08A"/>
+            <rect x="414" y="327" width="12" height="3" fill="#262626"/>
+            <rect x="1038" y="332" width="4" height="66" fill="#262626"/>
+            <circle class="farol-g" cx="1040" cy="328" r="22" fill="#FFE08A" opacity=".2" style="animation-delay:1s"/>
+            <circle cx="1040" cy="328" r="6" fill="#FFE08A"/>
+            <rect x="1034" y="321" width="12" height="3" fill="#262626"/>
+        </g>
+    </svg>
+</div>
+
+<!-- Luces de Navidad a los lados (parpadean) -->
+<div class="luces-lado izq" id="lucesIzq" aria-hidden="true"></div>
+<div class="luces-lado der" id="lucesDer" aria-hidden="true"></div>
+
 <!-- NAVBAR -->
 <nav class="erp-navbar">
-    <a class="erp-brand" href="/">🎃 Mi ERP</a>
+    <a class="erp-brand" href="/"><span id="brandEmoji">🎄</span> Mi ERP</a>
+
+    <!-- Contador (antes estaba en el footer) -->
+    <div class="cuenta cuenta-nav" id="cuenta">
+        <span class="cuenta-tit" id="cuentaTit">🎄 Faltan para Navidad</span>
+        <div class="cuenta-cajas" id="cuentaCajas">
+            <div class="cc"><b id="cdD">--</b><small>días</small></div>
+            <div class="cc"><b id="cdH">--</b><small>horas</small></div>
+            <div class="cc"><b id="cdM">--</b><small>min</small></div>
+            <div class="cc"><b id="cdS">--</b><small>seg</small></div>
+        </div>
+        <span class="cuenta-feliz" id="cuentaFeliz">🎅 ¡Feliz Navidad! 🎁</span>
+    </div>
+
     <div class="erp-nav-links">
         <a href="{% url 'productos:lista' %}"
            class="erp-nav-link {% block nav_productos %}{% endblock %}">Productos</a>
@@ -319,6 +1291,18 @@
            class="erp-nav-link {% block nav_ventas %}{% endblock %}">Ventas</a>
         <a href="{% url 'reportes:inicio' %}"
            class="erp-nav-link {% block nav_reportes %}{% endblock %}">Reportes</a>
+        <a href="{% url 'catalogo:catalogo' %}"
+           class="erp-nav-link {% block nav_catalogo %}{% endblock %}">
+            🛒 Tienda
+        </a>
+        <!-- Contador del carrito en la navbar -->
+        {% if carrito_total_items > 0 %}
+        <a href="{% url 'catalogo:carrito' %}"
+           class="erp-nav-link"
+           style="position:relative;">
+            🛍️ ({{ carrito_total_items }})
+        </a>
+        {% endif %}
         <a href="/admin/" class="erp-nav-link">Admin</a>
         {% if user.is_authenticated %}
             <a href="/accounts/logout/" class="erp-nav-link">
@@ -327,7 +1311,31 @@
         {% else %}
             <a href="/accounts/login/" class="erp-nav-link">Entrar</a>
         {% endif %}
-        <button class="theme-toggle" id="themeBtn" title="Cambiar tema">🌙</button>
+        <button class="theme-toggle" id="themeBtn" title="Cambiar tema">🗓️</button>
+    </div>
+
+    <div class="guirnalda" aria-hidden="true">
+        <svg preserveAspectRatio="none">
+            <defs>
+                <pattern id="swag" width="220" height="46" patternUnits="userSpaceOnUse">
+                    <path d="M0 2 Q110 44 220 2" stroke="#2E9E5B" stroke-width="4" fill="none" stroke-linecap="round"/>
+                    <path d="M0 2 Q110 44 220 2" stroke="#7BE0A3" stroke-width="1.2" fill="none" stroke-dasharray="3 7"/>
+                    <g class="bola">
+                        <circle cx="44"  cy="22" r="6" fill="#E04656"/>
+                        <circle cx="42"  cy="20" r="1.8" fill="#FFF" opacity=".7"/>
+                    </g>
+                    <g class="bola" style="animation-delay:.7s">
+                        <circle cx="110" cy="30" r="7" fill="#F0C45A"/>
+                        <circle cx="108" cy="28" r="2" fill="#FFF" opacity=".7"/>
+                    </g>
+                    <g class="bola" style="animation-delay:1.4s">
+                        <circle cx="176" cy="22" r="6" fill="#4DA3FF"/>
+                        <circle cx="174" cy="20" r="1.8" fill="#FFF" opacity=".7"/>
+                    </g>
+                </pattern>
+            </defs>
+            <rect width="100%" height="46" fill="url(#swag)"/>
+        </svg>
     </div>
 </nav>
 
@@ -354,37 +1362,1420 @@
 
 <!-- FOOTER -->
 <footer class="erp-footer">
-    🎃 Mi ERP · Hecho con Django 4.2 LTS · Feliz Halloween 👻
+    <div class="footer-txt" id="footerTxt" title="Psst… ↑ ↑ ↓ ↓ ← → ← → B A">🎄 Mi ERP · Hecho con Django 4.2 LTS · Felices fiestas ✨</div>
 </footer>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
-</script>
+<button type="button" class="subir" id="btnSubir" aria-label="Subir al inicio" title="Subir">↑</button>
 
-<!-- Selector de temas: Halloween, oscuro, Bosque y claro -->
+<!-- ═══════════ VILLA PEQUEÑA CON GENTE CAMINANDO ═══════════ -->
+<div class="villa" id="villa" aria-hidden="true">
+    <svg class="villa-svg" viewBox="0 0 1600 70" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="62" width="1600" height="8" fill="#DCEBF5"/>
+        <g id="villaCasas"></g>
+    </svg>
+    <div id="villaGente"></div>
+</div>
+
+<!-- ═══════════ SANTA GIGANTE (se clona del Santa chico por JS) ═══════════ -->
+<div class="santa-gigante" id="santaGigante"></div>
+
+<!-- ═══════════ ARBOLITO (clic: cambia las luces) ═══════════ -->
+<div class="arbolito" title="¡Tócame!">
+    <svg viewBox="0 0 90 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="45" cy="117" rx="38" ry="4" fill="rgba(0,0,0,.35)"/>
+        <rect x="40" y="100" width="10" height="14" fill="#4A2E1A"/>
+        <polygon points="45,48 82,102 8,102" fill="#14573A" stroke="#0B3A26" stroke-width="1.5" stroke-linejoin="round"/>
+        <polygon points="45,26 72,72 18,72" fill="#186B45" stroke="#0B3A26" stroke-width="1.5" stroke-linejoin="round"/>
+        <polygon points="45,10 62,46 28,46" fill="#1C7A4E" stroke="#0B3A26" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M30 58 Q45 66 60 58" fill="none" stroke="#F0C45A" stroke-width="1.8"/>
+        <path d="M22 88 Q45 100 68 88" fill="none" stroke="#F0C45A" stroke-width="1.8"/>
+        <path class="estrella-arb" d="M45 0 L48 7 L56 7 L50 12 L52 20 L45 15 L38 20 L40 12 L34 7 L42 7 Z"
+              fill="#FFD54A" stroke="#FFF1A8" stroke-width=".8"/>
+        <circle class="lu"    cx="42" cy="36" r="3"   fill="#E04656"/>
+        <circle class="lu l1" cx="52" cy="54" r="3"   fill="#F0C45A"/>
+        <circle class="lu l2" cx="36" cy="64" r="3.2" fill="#4DA3FF"/>
+        <circle class="lu"    cx="56" cy="80" r="3.2" fill="#E04656"/>
+        <circle class="lu l1" cx="30" cy="92" r="3.4" fill="#F0C45A"/>
+        <circle class="lu l2" cx="48" cy="94" r="3.4" fill="#4DA3FF"/>
+        <circle class="lu"    cx="64" cy="96" r="3"   fill="#4BD98A"/>
+        <rect x="6"  y="104" width="16" height="12" fill="#D6384B" stroke="#F5F7F2" stroke-width=".6"/>
+        <path d="M14 104 V116 M6 110 H22" stroke="#F0C45A" stroke-width="2"/>
+        <rect x="66" y="107" width="14" height="9" fill="#F0C45A" stroke="#F5F7F2" stroke-width=".6"/>
+        <path d="M73 107 V116 M66 111 H80" stroke="#D6384B" stroke-width="2"/>
+    </svg>
+</div>
+
+<!-- ═══════════ SANTA ═══════════ -->
+<div class="santa-w" id="santaW" title="¡Tócame!">
+    <div class="santa-burbuja" id="santaBurbuja">¡Ho ho ho! 🎅</div>
+    <svg class="santa-svg" viewBox="0 0 140 190" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="70" cy="186" rx="54" ry="5" fill="rgba(0,0,0,.4)"/>
+        <!-- saco de regalos -->
+        <path d="M14 180 Q0 140 18 112 Q34 100 46 118 Q52 150 48 180 Z" fill="#8B5A3C" stroke="#5A3A24" stroke-width="2"/>
+        <path d="M20 118 Q32 108 42 120" fill="none" stroke="#F0C45A" stroke-width="3"/>
+        <rect x="20" y="100" width="14" height="14" fill="#D6384B" stroke="#F5F7F2" stroke-width="1"/>
+        <path d="M27 100 V114 M20 107 H34" stroke="#F0C45A" stroke-width="2"/>
+        <rect x="31" y="95" width="12" height="13" fill="#2E8B57" stroke="#F5F7F2" stroke-width="1"/>
+        <path d="M37 95 V108" stroke="#F0C45A" stroke-width="2"/>
+        <!-- botas -->
+        <rect x="48" y="164" width="20" height="20" rx="6" fill="#1B1B1B"/>
+        <rect x="76" y="164" width="20" height="20" rx="6" fill="#1B1B1B"/>
+        <rect x="46" y="160" width="24" height="8" rx="4" fill="#FFFFFF"/>
+        <rect x="74" y="160" width="24" height="8" rx="4" fill="#FFFFFF"/>
+        <!-- abrigo -->
+        <path d="M40 86 Q38 60 70 58 Q102 60 100 86 L104 162 L36 162 Z" fill="#D6384B" stroke="#8E1B2F" stroke-width="1.5"/>
+        <rect x="35" y="150" width="70" height="14" rx="7" fill="#FFFFFF"/>
+        <rect x="66" y="62" width="8" height="90" fill="#FFFFFF"/>
+        <rect x="38" y="112" width="64" height="12" fill="#1B1B1B"/>
+        <rect x="62" y="109" width="16" height="18" rx="2" fill="#F0C45A" stroke="#B8860B" stroke-width="1.5"/>
+        <rect x="66" y="113" width="8" height="10" fill="#1B1B1B"/>
+        <circle cx="70" cy="80" r="2" fill="#1B1B1B"/>
+        <circle cx="70" cy="95" r="2" fill="#1B1B1B"/>
+        <!-- brazo quieto -->
+        <path d="M42 70 Q28 92 36 120" stroke="#D6384B" stroke-width="14" stroke-linecap="round" fill="none"/>
+        <circle cx="36" cy="124" r="8" fill="#FFFFFF"/>
+        <!-- brazo que saluda -->
+        <g class="brazo-saluda">
+            <path d="M98 70 Q114 62 118 42" stroke="#D6384B" stroke-width="14" stroke-linecap="round" fill="none"/>
+            <circle cx="118" cy="36" r="8" fill="#FFFFFF"/>
+        </g>
+        <!-- cabeza -->
+        <circle cx="70" cy="46" r="22" fill="#F2C9A5"/>
+        <circle cx="57" cy="52" r="4.5" fill="#F29BA0" opacity=".6"/>
+        <circle cx="83" cy="52" r="4.5" fill="#F29BA0" opacity=".6"/>
+        <circle cx="62" cy="43" r="2.2" fill="#1B1B1B"/>
+        <circle cx="78" cy="43" r="2.2" fill="#1B1B1B"/>
+        <path d="M57 37 Q62 34 67 37 M73 37 Q78 34 83 37" stroke="#FFFFFF" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+        <circle cx="70" cy="50" r="4" fill="#E9A58B"/>
+        <path d="M48 48 Q46 86 70 92 Q94 86 92 48 Q84 64 70 62 Q56 64 48 48 Z" fill="#FFFFFF"/>
+        <path d="M55 55 Q70 46 85 55 Q78 63 70 59 Q62 63 55 55 Z" fill="#FFFFFF" stroke="#E3E3E3" stroke-width=".8"/>
+        <!-- gorro -->
+        <path d="M46 38 C46 12 62 4 78 4 C96 4 108 14 112 30 C100 22 92 24 86 26 L94 38 Z" fill="#D6384B" stroke="#8E1B2F" stroke-width="1.2"/>
+        <rect x="43" y="34" width="54" height="12" rx="6" fill="#FFFFFF"/>
+        <circle cx="112" cy="30" r="7" fill="#FFFFFF"/>
+    </svg>
+</div>
+
+<!-- ═══════════ CAJA DE MÚSICA ═══════════ -->
+<div class="caja-w">
+    <span class="caja-cap" id="cajaCap">♪ Toca la caja de música</span>
+    <button class="caja-btn" id="cajaMusica" type="button" aria-pressed="false" aria-label="Caja de música navideña">
+        <svg viewBox="0 0 150 125" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="madera" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#9A6038"/>
+                    <stop offset="1" stop-color="#5D3620"/>
+                </linearGradient>
+            </defs>
+            <ellipse cx="75" cy="121" rx="64" ry="4" fill="rgba(0,0,0,.4)"/>
+            <!-- tapa abierta -->
+            <path d="M18 62 L30 20 Q75 12 120 20 L132 62 Z" fill="url(#madera)" stroke="#3E2314" stroke-width="1.5"/>
+            <path d="M27 58 L36 27 Q75 20 114 27 L123 58 Z" fill="#8E1B2F"/>
+            <path d="M27 58 L36 27 Q75 20 114 27 L123 58" fill="none" stroke="#F0C45A" stroke-width="1.4"/>
+            <!-- caja -->
+            <path d="M10 64 H140 V112 Q140 116 136 116 H14 Q10 116 10 112 Z" fill="url(#madera)" stroke="#3E2314" stroke-width="1.5"/>
+            <rect x="10" y="60" width="130" height="10" rx="3" fill="#7A4A2B" stroke="#3E2314" stroke-width="1.2"/>
+            <rect x="10" y="90" width="130" height="3" fill="#F0C45A"/>
+            <path d="M75 96 L77.5 102 L84 102 L79 106 L81 112 L75 108.500 L69 112 L71 106 L66 102 L72.500 102 Z" fill="#F0C45A"/>
+            <circle cx="24" cy="103" r="2" fill="#F0C45A"/>
+            <circle cx="126" cy="103" r="2" fill="#F0C45A"/>
+            <!-- espejo -->
+            <ellipse cx="75" cy="64" rx="30" ry="4.5" fill="#BFE6FF" opacity=".85"/>
+            <!-- bailarina -->
+            <g class="bailarina">
+                <circle cx="75" cy="24" r="3" fill="#5A3320"/>
+                <circle cx="75" cy="30" r="5" fill="#F2C9A5"/>
+                <path d="M72 35 Q75 33 78 35 L77 47 H73 Z" fill="#F7B6D2"/>
+                <path d="M73 38 Q62 32 57 24 M77 38 Q88 32 93 24" stroke="#F2C9A5" stroke-width="2" fill="none" stroke-linecap="round"/>
+                <ellipse cx="75" cy="49" rx="17" ry="5" fill="#F7C6DC"/>
+                <ellipse cx="75" cy="52" rx="13" ry="3.5" fill="#FFFFFF"/>
+                <path d="M73 53 V61 M77 53 L80 58" stroke="#F2C9A5" stroke-width="2" stroke-linecap="round"/>
+            </g>
+            <!-- manivela -->
+            <g class="manivela">
+                <circle cx="134" cy="92" r="5" fill="#F0C45A" stroke="#B8860B" stroke-width="1"/>
+                <path d="M134 92 L134 80" stroke="#F0C45A" stroke-width="2.6" stroke-linecap="round"/>
+                <circle cx="134" cy="79" r="3.2" fill="#D6384B"/>
+            </g>
+        </svg>
+    </button>
+</div>
+
+<!-- ═══════════ HALLOWEEN: calabaza, fantasma y murciélagos (solo en su fecha) ═══════════ -->
+<div class="hallo-decor" aria-hidden="true">
+    <span class="hd-murcielago m1">🦇</span>
+    <span class="hd-murcielago m2">🦇</span>
+    <span class="hd-murcielago m3">🦇</span>
+    <span class="hd-fantasma">👻</span>
+    <span class="hd-calabaza" id="halloCalabaza" title="¡Boo!">🎃</span>
+</div>
+
+<!-- ═══════════ EXTRAS: sonido, nieve, estrella fugaz, regalo de avisos, mensajes ═══════════ -->
+<div class="nx-root" id="nxRoot">
+    <button type="button" class="nx-sonido" id="nxSonido" aria-pressed="false"
+            title="Activar o desactivar las campanitas">🔔</button>
+    <button type="button" class="nx-nieve" id="btnNieve" aria-pressed="false"
+            title="Quitar la nieve">❄️</button>
+    <div class="nx-estrella" id="nxEstrella" role="button" tabindex="0"
+         aria-label="Estrella fugaz: haz clic para pedir un deseo"></div>
+    <div class="nx-toast" id="nxToast" role="status" aria-live="polite"></div>
+    <div class="nx-cartel" id="nxCartel" aria-hidden="true"></div>
+    <div class="nx-regalo" id="nxRegalo" role="button" tabindex="0"
+         aria-label="Regalo: haz clic para abrir el mensaje">
+        <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+            <rect x="20" y="54" width="80" height="58" rx="4" fill="#C71F4F"/>
+            <rect x="54" y="54" width="12" height="58" fill="#FFE600"/>
+            <g class="nx-tapa">
+                <rect x="14" y="30" width="92" height="24" rx="4" fill="#FF2E63"/>
+                <rect x="54" y="30" width="12" height="24" fill="#FFE600"/>
+                <path d="M60 30 C40 4 12 14 30 30 Z" fill="#FFE600"/>
+                <path d="M60 30 C80 4 108 14 90 30 Z" fill="#FFE600"/>
+                <circle cx="60" cy="30" r="5" fill="#FFB800"/>
+            </g>
+        </svg>
+        <div class="nx-regalo-pista">¡Tienes un mensaje! Ábrelo 🎁</div>
+        <div class="nx-regalo-texto" id="nxRegaloTexto"></div>
+    </div>
+</div>
+
+<!-- ═══════════ MODO LOCURA (escribe 67): Santa haciendo el 6-7 ═══════════ -->
+<div class="locura-wrap" id="locuraWrap" aria-hidden="true">
+    <div class="locura-flash"></div>
+    <div class="locura-67txt">67</div>
+    <div class="locura-santas" id="locuraSantas">
+        <svg class="s67" viewBox="0 -24 260 354" xmlns="http://www.w3.org/2000/svg">
+            <!-- piernas y botas -->
+            <rect x="86" y="215" width="36" height="52" fill="#C62A3C"/>
+            <rect x="138" y="215" width="36" height="52" fill="#C62A3C"/>
+            <rect x="82" y="268" width="44" height="46" rx="9" fill="#1B1B1B"/>
+            <rect x="134" y="268" width="44" height="46" rx="9" fill="#1B1B1B"/>
+            <rect x="78" y="258" width="52" height="16" rx="8" fill="#FFF"/>
+            <rect x="130" y="258" width="52" height="16" rx="8" fill="#FFF"/>
+            <!-- abrigo -->
+            <path d="M70 120 Q68 80 130 78 Q192 80 190 120 L200 250 L60 250 Z" fill="#D6384B" stroke="#8E1B2F" stroke-width="3"/>
+            <rect x="56" y="236" width="148" height="26" rx="13" fill="#FFF"/>
+            <rect x="122" y="84" width="16" height="152" fill="#FFF"/>
+            <rect x="66" y="176" width="128" height="22" fill="#1B1B1B"/>
+            <rect x="112" y="170" width="36" height="34" rx="4" fill="#F0C45A" stroke="#B8860B" stroke-width="3"/>
+            <rect x="120" y="178" width="20" height="18" fill="#1B1B1B"/>
+            <!-- brazos haciendo el 6-7 (suben y bajan al revés) -->
+            <g class="b67 l">
+                <path d="M80 112 Q40 120 36 156 L34 106" stroke="#D6384B" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                <circle cx="34" cy="88" r="18" fill="#FFF"/>
+            </g>
+            <g class="b67 r">
+                <path d="M180 112 Q220 120 224 156 L226 106" stroke="#D6384B" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                <circle cx="226" cy="88" r="18" fill="#FFF"/>
+            </g>
+            <!-- cabeza -->
+            <circle cx="130" cy="52" r="34" fill="#F2C9A5"/>
+            <circle cx="108" cy="62" r="7" fill="#F29BA0" opacity=".6"/>
+            <circle cx="152" cy="62" r="7" fill="#F29BA0" opacity=".6"/>
+            <ellipse cx="117" cy="46" rx="9" ry="10" fill="#FFF"/>
+            <ellipse cx="143" cy="46" rx="9" ry="10" fill="#FFF"/>
+            <circle class="pupila" cx="117" cy="47" r="4" fill="#111"/>
+            <circle class="pupila" cx="143" cy="47" r="4" fill="#111"/>
+            <path d="M104 33 Q116 24 127 33 M133 33 Q144 24 156 33" stroke="#FFF" stroke-width="6" fill="none" stroke-linecap="round"/>
+            <path d="M92 58 Q86 116 130 124 Q174 116 168 58 Q154 90 130 88 Q106 90 92 58 Z" fill="#FFF"/>
+            <circle cx="130" cy="63" r="6" fill="#E9A58B"/>
+            <path d="M100 72 Q116 60 130 72 Q144 60 160 72 Q146 86 130 78 Q114 86 100 72 Z" fill="#FFF" stroke="#E3E3E3" stroke-width="1"/>
+            <ellipse cx="130" cy="96" rx="12" ry="10" fill="#7A1020"/>
+            <!-- gorro -->
+            <path d="M92 34 C92 4 112 -6 134 -6 C160 -6 176 8 188 32 Z" fill="#D6384B" stroke="#8E1B2F" stroke-width="3"/>
+            <rect x="88" y="26" width="86" height="20" rx="10" fill="#FFF"/>
+            <circle cx="190" cy="30" r="12" fill="#FFF"/>
+        </svg>
+    </div>
+</div>
+
+<!-- Nieve + fuegos artificiales -->
+<canvas id="nieve" aria-hidden="true"></canvas>
+<canvas id="fuegos" aria-hidden="true"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Estrellas del cielo (menos en modo ligero) -->
 <script>
 (function () {
-    var btn    = document.getElementById('themeBtn');
-    var html   = document.documentElement;
-    var themes = ['halloween', 'dark', 'bosque', 'light'];
-    // El icono muestra a qué tema se pasa al hacer clic
-    var icons  = { halloween: '🌙', dark: '🌲', bosque: '☀️', light: '🎃' };
-    var saved  = localStorage.getItem('erpTema');
-    if (themes.indexOf(saved) === -1) { saved = 'halloween'; }
-    html.setAttribute('data-theme', saved);
-    if (btn) {
-        btn.textContent = icons[saved];
-        btn.title = 'Cambiar tema';
-        btn.addEventListener('click', function () {
-            var current = html.getAttribute('data-theme');
-            var next = themes[(themes.indexOf(current) + 1) % themes.length];
-            html.setAttribute('data-theme', next);
-            btn.textContent = icons[next];
-            localStorage.setItem('erpTema', next);
-        });
+    var cont = document.getElementById('estrellas');
+    if (!cont) return;
+    var colores = ['#FFFFFF', '#FFF4D6', '#D6E8FF'];
+    var N = document.documentElement.hasAttribute('data-lite') ? 55 : 130;
+    for (var i = 0; i < N; i++) {
+        var s = document.createElement('div');
+        var t = Math.random() * 2 + 1;
+        s.className = 'estrella';
+        s.style.cssText =
+            'left:' + (Math.random() * 100) + '%;' +
+            'top:' + (Math.random() * 65) + '%;' +
+            'width:' + t + 'px;height:' + t + 'px;' +
+            'background:' + colores[i % 3] + ';' +
+            'animation-duration:' + (2 + Math.random() * 4) + 's;' +
+            'animation-delay:' + (Math.random() * 5) + 's;';
+        cont.appendChild(s);
     }
 })();
 </script>
+
+<!-- Bosque del paisaje (pinos con nieve y luces) -->
+<script>
+(function () {
+    function rnd(i) { var x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+    var COL = ['#FF4D5E', '#F0C45A', '#4DA3FF', '#4BD98A', '#FF8AD8'];
+
+    function pino(px, base, h, fill, cap, k, luces) {
+        var w = h * 0.52, s = '';
+        var tiers = [[0, .46, .52], [.24, .74, .8], [.5, 1, 1]];
+        for (var t = 0; t < 3; t++) {
+            var top = base - h + tiers[t][0] * h;
+            var bot = base - h + tiers[t][1] * h;
+            var hw = w / 2 * tiers[t][2];
+            s += '<polygon points="' + px + ',' + top + ' ' + (px + hw) + ',' + bot + ' ' + (px - hw) + ',' + bot + '" fill="' + fill + '"/>';
+            if (cap) {
+                var cb = top + (bot - top) * 0.42, cw = hw * 0.42;
+                s += '<polygon points="' + px + ',' + top + ' ' + (px + cw) + ',' + cb + ' ' + (px - cw) + ',' + cb + '" fill="#EAF3FA" opacity=".9"/>';
+            }
+        }
+        if (luces) {
+            for (var j = 0; j < 9; j++) {
+                var yy = base - h + h * (0.16 + 0.76 * rnd(k * 17 + j));
+                var half = (yy - (base - h)) / h * w / 2 * 0.8;
+                var xx = px + (rnd(k * 31 + j * 7) * 2 - 1) * half;
+                var c = COL[j % 5];
+                s += '<circle class="lu l' + (j % 3) + '" cx="' + xx.toFixed(1) + '" cy="' + yy.toFixed(1) +
+                     '" r="2.6" fill="' + c + '" style="filter:drop-shadow(0 0 3px ' + c + ')"/>';
+            }
+        }
+        return s;
+    }
+
+    function bosque(id, y0, hmin, hmax, paso, fill, cap, luces, saltar) {
+        var g = document.getElementById(id);
+        if (!g) return;
+        var s = '';
+        for (var x = -30, i = 0; x < 1650; x += paso, i++) {
+            if (saltar && rnd(i + 5) < saltar) continue;
+            var h = hmin + rnd(i) * (hmax - hmin);
+            s += pino(x + (rnd(i + 9) - 0.5) * paso * 0.5, y0, h, fill, cap, i, luces);
+        }
+        g.innerHTML = s;
+    }
+
+    bosque('pinosLejos', 352, 60, 105, 34, 'var(--pino-c)', false, false, 0);
+    bosque('pinosMedio', 374, 95, 150, 52, 'var(--pino-b)', true,  false, 0.25);
+    bosque('pinosCerca', 422, 170, 250, 118, 'var(--pino-a)', true, true,  0.45);
+})();
+</script>
+
+<!-- Luces laterales que parpadean -->
+<script>
+(function () {
+    var COL = ['#FF4D5E', '#F0C45A', '#4DA3FF', '#4BD98A', '#FF8AD8'];
+
+    function cuerda(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var H = Math.max(window.innerHeight - 230, 200), W = 28, paso = 38;
+        var n = Math.floor(H / paso);
+        var d = 'M' + (W / 2) + ',0', b = '';
+        for (var i = 1; i <= n; i++) {
+            var y = i * paso, x = W / 2 + 8 * Math.sin(i * 1.3);
+            d += ' L' + x.toFixed(1) + ',' + y;
+            var c = COL[i % 5];
+            b += '<g class="lu l' + (i % 3) + '" style="filter:drop-shadow(0 0 5px ' + c + ')">' +
+                 '<rect x="' + (x - 2).toFixed(1) + '" y="' + y + '" width="4" height="3" fill="#1F3D2A"/>' +
+                 '<ellipse cx="' + x.toFixed(1) + '" cy="' + (y + 9) + '" rx="4.4" ry="6.2" fill="' + c + '"/></g>';
+        }
+        el.innerHTML = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">' +
+                       '<path d="' + d + '" stroke="#1F5A3A" stroke-width="1.6" fill="none"/>' + b + '</svg>';
+    }
+    function todo() { cuerda('lucesIzq'); cuerda('lucesDer'); }
+    todo();
+    var t;
+    window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(todo, 250); });
+})();
+</script>
+
+<!-- Sombra del trineo: cruza el cielo y pasa frente a la luna -->
+<script>
+(function () {
+    var el  = document.getElementById('trineoSombra');
+    var svg = document.getElementById('trineoSvg');
+    if (!el || !el.animate || document.documentElement.hasAttribute('data-lite')) return;
+    var W = window.innerWidth;
+    var ancho = el.offsetWidth || 440;
+    el.animate([
+        { transform: 'translate(' + (-ancho - 80) + 'px, 70px) rotate(-5deg)', offset: 0 },
+        { transform: 'translate(' + (W * 0.35) + 'px, 0px) rotate(-1deg)',     offset: 0.4 },
+        { transform: 'translate(' + (W * 0.7) + 'px, -22px) rotate(2deg)',     offset: 0.75 },
+        { transform: 'translate(' + (W + 80) + 'px, 30px) rotate(5deg)',       offset: 1 }
+    ], { duration: 20000, endDelay: 7000, iterations: Infinity, easing: 'linear' });
+    if (svg && svg.animate) {
+        svg.animate([
+            { transform: 'translateY(0px)' },
+            { transform: 'translateY(-10px)' },
+            { transform: 'translateY(0px)' }
+        ], { duration: 2600, iterations: Infinity, easing: 'ease-in-out' });
+    }
+})();
+</script>
+
+<!-- Contador real: Navidad (25 dic) o Halloween (31 oct) según el tema -->
+<script>
+(function () {
+    var html = document.documentElement;
+    function dos(n) { return (n < 10 ? '0' : '') + n; }
+
+    function destino() {
+        return html.getAttribute('data-theme') === 'halloween'
+            ? { m: 9,  d: 31, tit: '🎃 Faltan para Halloween', feliz: '🎃 ¡Feliz Halloween! 👻' }
+            : { m: 11, d: 25, tit: '🎄 Faltan para Navidad',   feliz: '🎅 ¡Feliz Navidad! 🎁' };
+    }
+
+    window.erpFaltan = function () {
+        var dest = destino(), ahora = new Date(), y = ahora.getFullYear();
+        // 1 y 2 de noviembre en tema Halloween: Día de Muertos
+        if (dest.m === 9 && ahora.getMonth() === 10 && ahora.getDate() <= 2) {
+            return { navidad: true, texto: '💀 ¡Feliz Día de Muertos! 🌼', d: 0, h: 0, m: 0, s: 0 };
+        }
+        var meta = new Date(y, dest.m, dest.d, 0, 0, 0);
+        var fin  = new Date(y, dest.m, dest.d + 1, 0, 0, 0);
+        if (ahora >= meta && ahora < fin) return { navidad: true, d: 0, h: 0, m: 0, s: 0 };
+        if (ahora >= fin) meta = new Date(y + 1, dest.m, dest.d, 0, 0, 0);
+        var ms = meta - ahora;
+        return {
+            navidad: false,
+            d: Math.floor(ms / 864e5),
+            h: Math.floor(ms % 864e5 / 36e5),
+            m: Math.floor(ms % 36e5 / 6e4),
+            s: Math.floor(ms % 6e4 / 1e3)
+        };
+    };
+
+    var cuenta = document.getElementById('cuenta'),
+        cD = document.getElementById('cdD'), cH = document.getElementById('cdH'),
+        cM = document.getElementById('cdM'), cS = document.getElementById('cdS'),
+        cajas = document.getElementById('cuentaCajas'),
+        tit = document.getElementById('cuentaTit'),
+        feliz = document.getElementById('cuentaFeliz');
+
+    function pintar() {
+        if (html.getAttribute('data-theme') === 'normal') {
+            if (cuenta) cuenta.style.display = 'none';
+            return;
+        }
+        if (cuenta) cuenta.style.display = '';
+        var dest = destino(), f = window.erpFaltan();
+        if (f.navidad) {
+            if (cajas) cajas.style.display = 'none';
+            if (tit) tit.style.display = 'none';
+            if (feliz) { feliz.textContent = f.texto || dest.feliz; feliz.style.display = 'block'; }
+            return;
+        }
+        if (cajas) cajas.style.display = 'flex';
+        if (tit) { tit.style.display = ''; tit.textContent = dest.tit; }
+        if (feliz) feliz.style.display = 'none';
+        if (cD) cD.textContent = f.d;
+        if (cH) cH.textContent = dos(f.h);
+        if (cM) cM.textContent = dos(f.m);
+        if (cS) cS.textContent = dos(f.s);
+    }
+    pintar();
+    setInterval(pintar, 1000);
+})();
+</script>
+
+<!-- Caja de música: suena música navideña al tocarla (sin archivos, se sintetiza) -->
+<script>
+(function () {
+    var btn = document.getElementById('cajaMusica');
+    var cap = document.getElementById('cajaCap');
+    if (!btn) return;
+
+    var SEMI = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+    function frec(n) {
+        var m = /^([A-G])(#?)(\d)$/.exec(n);
+        var midi = 12 * (parseInt(m[3], 10) + 1) + SEMI[m[1]] + (m[2] ? 1 : 0);
+        return 440 * Math.pow(2, (midi - 69) / 12);
+    }
+    function parse(txt) {
+        return txt.split(' ').map(function (s) { var p = s.split(':'); return [p[0], parseFloat(p[1])]; });
+    }
+
+    var canciones = [
+        { nombre: 'Jingle Bells', bpm: 172, notas: parse(
+            'E5:1 E5:1 E5:2 E5:1 E5:1 E5:2 E5:1 G5:1 C5:1.5 D5:.5 E5:4 ' +
+            'F5:1 F5:1 F5:1.5 F5:.5 F5:1 E5:1 E5:1 E5:.5 E5:.5 G5:1 G5:1 F5:1 D5:1 C5:4') },
+        { nombre: 'Noche de paz', bpm: 90, notas: parse(
+            'G4:1.5 A4:.5 G4:1 E4:3 G4:1.5 A4:.5 G4:1 E4:3 D5:2 D5:1 B4:3 C5:2 C5:1 G4:3 ' +
+            'A4:2 A4:1 C5:1.5 B4:.5 A4:1 G4:1.5 A4:.5 G4:1 E4:3 A4:2 A4:1 C5:1.5 B4:.5 A4:1 ' +
+            'G4:1.5 A4:.5 G4:1 E4:3 D5:2 D5:1 F5:1.5 D5:.5 B4:1 C5:3 E5:3 C5:1 G4:1 E4:1 ' +
+            'G4:1.5 F4:.5 D4:1 C4:3') },
+        { nombre: 'We Wish You a Merry Christmas', bpm: 160, notas: parse(
+            'D4:1 G4:1 G4:.5 A4:.5 G4:.5 F#4:.5 E4:1 E4:1 E4:1 A4:1 A4:.5 B4:.5 A4:.5 G4:.5 ' +
+            'F#4:1 D4:1 D4:1 B4:1 B4:.5 C5:.5 B4:.5 A4:.5 G4:1 E4:1 D4:.5 D4:.5 E4:1 A4:1 F#4:1 G4:3') }
+    ];
+
+    var ctx = null, master = null, playing = false, timer = null, cancion = 0, idx = 0;
+
+    function actualizarCap() {
+        if (!cap) return;
+        cap.textContent = playing ? '♪ ' + canciones[cancion].nombre + ' · pausar' : '♪ Toca la caja de música';
+    }
+
+    function iniciarAudio() {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return false;
+        ctx = new AC();
+        master = ctx.createGain();
+        master.gain.value = 0.55;
+        var delay = ctx.createDelay();
+        delay.delayTime.value = 0.27;
+        var fb = ctx.createGain();
+        fb.gain.value = 0.27;
+        master.connect(ctx.destination);
+        master.connect(delay);
+        delay.connect(fb);
+        fb.connect(delay);
+        delay.connect(ctx.destination);
+        return true;
+    }
+
+    // Timbre de caja de música: seno + armónico agudo con caída rápida
+    function tono(f, t, dur) {
+        var o1 = ctx.createOscillator(), o2 = ctx.createOscillator();
+        var g = ctx.createGain(), g2 = ctx.createGain();
+        o1.type = 'sine';     o1.frequency.value = f;
+        o2.type = 'triangle'; o2.frequency.value = f * 2;
+        g2.gain.value = 0.22;
+        o1.connect(g); o2.connect(g2); g2.connect(g);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.35, t + 0.006);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + Math.max(dur, 0.5) + 0.9);
+        g.connect(master);
+        o1.start(t); o2.start(t);
+        o1.stop(t + dur + 1.4); o2.stop(t + dur + 1.4);
+    }
+
+    function flotar() {
+        var s = document.createElement('span');
+        s.className = 'nota-flot';
+        s.textContent = ['♪', '♫', '♬', '🎵'][Math.floor(Math.random() * 4)];
+        var r = btn.getBoundingClientRect();
+        s.style.left = (r.left + 30 + Math.random() * 70) + 'px';
+        s.style.top  = (r.top + 6) + 'px';
+        document.body.appendChild(s);
+        if (s.animate) {
+            var a = s.animate([
+                { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+                { transform: 'translate(' + (Math.random() * 50 - 10) + 'px,-110px) rotate(25deg)', opacity: 0 }
+            ], { duration: 2200, easing: 'ease-out' });
+            a.onfinish = function () { s.remove(); };
+        } else {
+            setTimeout(function () { s.remove(); }, 1500);
+        }
+    }
+
+    function paso() {
+        if (!playing) return;
+        var c = canciones[cancion], n = c.notas[idx];
+        var ms = 60000 / c.bpm * n[1];
+        if (n[0] !== 'R') {
+            tono(frec(n[0]), ctx.currentTime + 0.02, ms / 1000);
+            if (idx % 2 === 0) flotar();
+        }
+        idx++;
+        if (idx >= c.notas.length) {
+            idx = 0;
+            cancion = (cancion + 1) % canciones.length;
+            actualizarCap();
+            timer = setTimeout(paso, ms + 1100);
+        } else {
+            timer = setTimeout(paso, ms);
+        }
+    }
+
+    btn.addEventListener('click', function () {
+        if (!ctx && !iniciarAudio()) {
+            if (cap) cap.textContent = 'Tu navegador no soporta audio';
+            return;
+        }
+        if (ctx.state === 'suspended') ctx.resume();
+        playing = !playing;
+        btn.classList.toggle('sonando', playing);
+        btn.setAttribute('aria-pressed', playing ? 'true' : 'false');
+        if (playing) { paso(); } else { clearTimeout(timer); }
+        actualizarCap();
+    });
+})();
+</script>
+
+<!-- ═══════════ NIEVE PRO: 3 capas con profundidad, viento con ráfagas, copos de cristal,
+     el mouse los empuja y existe una TORMENTA secreta (escribe "nieve") ═══════════ -->
+<script>
+(function () {
+    var c = document.getElementById('nieve');
+    if (!c || !c.getContext) return;
+    var html = document.documentElement;
+    var lite = html.hasAttribute('data-lite');
+    var x = c.getContext('2d');
+    var W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var mx = -999, my = -999;
+    var fuerza = 1, objetivoFuerza = 1, finTormenta = 0;
+
+    // Capas: lejos (pequeñas, lentas) → cerca (grandes, rápidas, con forma de copo)
+    var CAPAS = [
+        { n: lite ? 40 : 110, r: [0.7, 1.5], v: [0.25, 0.6], a: 0.5,  copo: false, viento: 0.5 },
+        { n: lite ? 25 : 70,  r: [1.4, 2.6], v: [0.6, 1.2],  a: 0.78, copo: false, viento: 1   },
+        { n: lite ? 8  : 26,  r: [3.5, 6.5], v: [1.1, 2],    a: 0.95, copo: true,  viento: 1.6 }
+    ];
+    var f = [];
+
+    function tam() {
+        W = window.innerWidth; H = window.innerHeight;
+        c.width = W * dpr; c.height = H * dpr;
+        x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    function rnd(a, b) { return a + Math.random() * (b - a); }
+    function crear(capa, enTope) {
+        return {
+            capa: capa, x: Math.random() * W, y: enTope ? -10 : Math.random() * H,
+            r: rnd(capa.r[0], capa.r[1]), v: rnd(capa.v[0], capa.v[1]),
+            a: Math.random() * 6.28, s: rnd(0.5, 1.5),
+            rot: Math.random() * 6.28, vr: rnd(-0.02, 0.02), vx: 0
+        };
+    }
+    tam();
+    window.addEventListener('resize', tam);
+    window.addEventListener('mousemove', function (e) { mx = e.clientX; my = e.clientY; }, { passive: true });
+    window.addEventListener('mouseleave', function () { mx = my = -999; });
+    CAPAS.forEach(function (capa) { for (var i = 0; i < capa.n; i++) f.push(crear(capa, false)); });
+
+    // Copo de cristal de 6 brazos con ramitas
+    function dibujarCopo(p) {
+        var r = p.r;
+        x.save();
+        x.translate(p.x, p.y);
+        x.rotate(p.rot);
+        x.beginPath();
+        for (var k = 0; k < 6; k++) {
+            x.rotate(Math.PI / 3);
+            x.moveTo(0, 0); x.lineTo(0, r);
+            x.moveTo(0, r * 0.55); x.lineTo(r * 0.28, r * 0.8);
+            x.moveTo(0, r * 0.55); x.lineTo(-r * 0.28, r * 0.8);
+        }
+        x.stroke();
+        x.restore();
+    }
+
+    // API pública para la tormenta secreta
+    window.erpNieve = {
+        tormenta: function (ms) {
+            objetivoFuerza = 3.6;
+            finTormenta = Date.now() + (ms || 9000);
+        }
+    };
+
+    var t0 = Date.now();
+    function cuadro() {
+        var tema = html.getAttribute('data-theme');
+        if (document.hidden || tema === 'normal' || tema === 'halloween' || html.hasAttribute('data-sinnieve')) {
+            setTimeout(cuadro, 500);
+            return;
+        }
+        var ahora = Date.now(), t = (ahora - t0) / 1000;
+        if (finTormenta && ahora > finTormenta) { objetivoFuerza = 1; finTormenta = 0; }
+        fuerza += (objetivoFuerza - fuerza) * 0.03;
+
+        // Viento: brisa suave + ráfagas lentas
+        var viento = (Math.sin(t * 0.35) * 0.45 + Math.sin(t * 0.13 + 1.7) * 0.35 + 0.15) * fuerza;
+        if (fuerza > 1.5) viento += 1.8 * (fuerza - 1);
+
+        x.clearRect(0, 0, W, H);
+        x.lineCap = 'round';
+        for (var i = 0; i < f.length; i++) {
+            var p = f[i], capa = p.capa;
+            p.a += 0.012 * p.s;
+            p.y += p.v * (0.7 + fuerza * 0.3);
+            p.vx += (viento * capa.viento - p.vx) * 0.04;
+            p.x += p.vx + Math.sin(p.a) * 0.5 * capa.viento;
+            p.rot += p.vr;
+
+            // El mouse empuja los copos cercanos
+            var dx = p.x - mx, dy = p.y - my, d2 = dx * dx + dy * dy;
+            if (d2 < 14400) {
+                var d = Math.sqrt(d2) || 1, k = (120 - d) / 120;
+                p.x += dx / d * k * 5 * capa.viento;
+                p.y += dy / d * k * 3;
+            }
+
+            if (p.y > H + 10) { p.y = -10; p.x = Math.random() * W; }
+            if (p.x > W + 20) p.x = -20;
+            else if (p.x < -20) p.x = W + 20;
+
+            x.globalAlpha = capa.a;
+            if (capa.copo) {
+                x.strokeStyle = 'rgba(225,242,255,.95)';
+                x.lineWidth = 1.1;
+                x.shadowColor = 'rgba(180,225,255,.9)';
+                x.shadowBlur = 6;
+                dibujarCopo(p);
+                x.shadowBlur = 0;
+            } else {
+                x.fillStyle = '#FFFFFF';
+                x.beginPath();
+                x.arc(p.x, p.y, p.r, 0, 6.2832);
+                x.fill();
+            }
+        }
+        x.globalAlpha = 1;
+        requestAnimationFrame(cuadro);
+    }
+    cuadro();
+})();
+</script>
+
+<!-- Extras: campanitas, regalo, estrella fugaz, códigos secretos, fuegos artificiales, parallax… -->
+<script>
+(function () {
+    'use strict';
+    var html    = document.documentElement;
+    var reducir = false; // se ignora a propósito la preferencia del sistema para que todo funcione
+    var lite    = html.hasAttribute('data-lite');
+    var COLORES = ['#FF2E63', '#FF9F1C', '#FFE600', '#2BFF88', '#00F0FF', '#FF3DF2', '#F8FFF9'];
+    var LUCES   = ['#E04656', '#F0C45A', '#4DA3FF', '#4BD98A', '#FF8AD8'];
+    var DESEOS  = ['ventas que no paran 🛒', 'stock que nunca se acaba 📦', 'cero facturas perdidas 🧾',
+                   'clientes felices 😊', 'un servidor que no se cae 🖥️', 'más tiempo libre ✨'];
+
+    function $(id)     { return document.getElementById(id); }
+    function azar(a)   { return a[Math.floor(Math.random() * a.length)]; }
+    function rnd(a, b) { return a + Math.random() * (b - a); }
+    function tema()    { return html.getAttribute('data-theme') || ''; }
+    function esNav()   { var t = tema(); return t === 'navidad' || t === 'invierno'; }
+    function esHallo() { return tema() === 'halloween'; }
+    function activo()  { return esNav() || esHallo(); }
+    function guardar(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+    function leer(k)       { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+    /* ── Campanitas (WebAudio, sin archivos). Vienen apagadas ── */
+    var audio = null, sonidoOn = false, btnSonido = $('nxSonido');
+    function crearAudio() {
+        if (audio) return;
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) audio = new AC();
+    }
+    function campana(freq) {
+        if (!sonidoOn || !audio) return;
+        if (audio.state === 'suspended') audio.resume();
+        var t = audio.currentTime;
+        [1, 2.76, 5.4].forEach(function (m, i) {
+            var o = audio.createOscillator(), g = audio.createGain();
+            o.type = 'sine';
+            o.frequency.value = freq * m;
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.16 / (i + 1), t + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+            o.connect(g); g.connect(audio.destination);
+            o.start(t); o.stop(t + 1.5);
+        });
+    }
+    // Acorde de celebración (para el código secreto)
+    function acorde() {
+        if (!sonidoOn || !audio) return;
+        [523, 659, 784, 1047, 1319].forEach(function (f, i) { setTimeout(function () { campana(f); }, i * 110); });
+    }
+    sonidoOn = leer('nxSonido') === 'on';
+    if (btnSonido) {
+        btnSonido.setAttribute('aria-pressed', sonidoOn ? 'true' : 'false');
+        btnSonido.addEventListener('click', function () {
+            crearAudio();
+            sonidoOn = !sonidoOn;
+            btnSonido.setAttribute('aria-pressed', sonidoOn ? 'true' : 'false');
+            guardar('nxSonido', sonidoOn ? 'on' : 'off');
+            campana(880);
+        });
+    }
+    document.addEventListener('pointerdown', crearAudio, { once: true });
+    document.addEventListener('click', function (e) {
+        if (!sonidoOn || !activo() || !e.target.closest) return;
+        if (e.target.closest('.btn-erp-primary, .btn-erp-gold, .btn-erp-danger, .erp-nav-link, .santa-w, .arbolito, .hd-calabaza, #nxRegalo, #nxEstrella')) {
+            campana(azar([784, 880, 988, 1047]));
+        }
+    });
+
+    /* ── Aviso corto (disponible para todo el sitio) ── */
+    var toast = $('nxToast'), tToast = null;
+    function mostrarToast(txt, ms) {
+        if (!toast) return;
+        toast.textContent = txt;
+        toast.classList.add('visible');
+        clearTimeout(tToast);
+        tToast = setTimeout(function () { toast.classList.remove('visible'); }, ms || 4200);
+    }
+    window.erpToast = mostrarToast;
+
+    /* ── Cartel grande ── */
+    var cartel = $('nxCartel');
+    function mostrarCartel(titulo, sub) {
+        if (!cartel) return;
+        cartel.innerHTML = titulo + (sub ? '<small>' + sub + '</small>' : '');
+        cartel.classList.remove('ver');
+        void cartel.offsetWidth;
+        cartel.classList.add('ver');
+    }
+
+    /* ── Partículas ── */
+    function chispas(x, y, lista, n) {
+        if (reducir) return;
+        for (var i = 0; i < n; i++) {
+            var p = document.createElement('span');
+            p.className = 'nx-part';
+            p.textContent = azar(lista);
+            p.setAttribute('aria-hidden', 'true');
+            p.style.left = x + 'px';
+            p.style.top  = y + 'px';
+            p.style.fontSize = rnd(14, 26) + 'px';
+            document.body.appendChild(p);
+            var ang = rnd(0, 6.283), d = rnd(30, 90);
+            var a = p.animate([
+                { transform: 'translate(0,0) scale(.4)', opacity: 1 },
+                { transform: 'translate(' + Math.cos(ang) * d + 'px,' + Math.sin(ang) * d + 'px) scale(1.1)', opacity: 0 }
+            ], { duration: rnd(600, 1000), easing: 'ease-out', fill: 'forwards' });
+            a.onfinish = (function (el) { return function () { el.remove(); }; })(p);
+        }
+    }
+    function confeti(x, y, n) {
+        if (reducir) return;
+        n = lite ? Math.round(n * 0.5) : n;
+        for (var i = 0; i < n; i++) {
+            var p = document.createElement('span');
+            p.className = 'nx-part nx-conf';
+            p.style.left = x + 'px';
+            p.style.top  = y + 'px';
+            p.style.background = azar(COLORES);
+            document.body.appendChild(p);
+            var dx = rnd(-160, 160), dy = rnd(-190, -60);
+            var a = p.animate([
+                { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+                { transform: 'translate(' + dx + 'px,' + dy + 'px) rotate(' + rnd(0, 360) + 'deg)', opacity: 1, offset: 0.35 },
+                { transform: 'translate(' + (dx * 1.3) + 'px,' + (dy + rnd(300, 460)) + 'px) rotate(' + rnd(360, 900) + 'deg)', opacity: 0 }
+            ], { duration: rnd(1400, 2200), easing: 'cubic-bezier(.2,.6,.4,1)', fill: 'forwards' });
+            a.onfinish = (function (el) { return function () { el.remove(); }; })(p);
+        }
+    }
+    function cae(emoji) {
+        var p = document.createElement('span');
+        p.className = 'nx-part';
+        p.textContent = emoji;
+        p.setAttribute('aria-hidden', 'true');
+        p.style.left = rnd(0, window.innerWidth - 30) + 'px';
+        p.style.top = '-40px';
+        p.style.fontSize = rnd(20, 38) + 'px';
+        document.body.appendChild(p);
+        var a = p.animate([
+            { transform: 'translate(0,0) rotate(0deg)' },
+            { transform: 'translate(' + rnd(-80, 80) + 'px,' + (window.innerHeight + 80) + 'px) rotate(' + rnd(-360, 360) + 'deg)' }
+        ], { duration: rnd(2600, 4200), easing: 'linear' });
+        a.onfinish = function () { p.remove(); };
+    }
+
+    /* ── FUEGOS ARTIFICIALES (canvas) ── */
+    var fc = $('fuegos'), fx = fc ? fc.getContext('2d') : null;
+    var FW = 0, FH = 0, cohetes = [], chisp = [], fCorre = false, fFin = 0, fSig = 0;
+    function fTam() { if (!fc) return; FW = fc.width = window.innerWidth; FH = fc.height = window.innerHeight; }
+    fTam();
+    window.addEventListener('resize', fTam);
+
+    function explotar(px, py, hue) {
+        var n = lite ? 34 : 70, tipo = Math.random();
+        for (var i = 0; i < n; i++) {
+            var ang = (i / n) * 6.283 + rnd(-0.05, 0.05);
+            var v = tipo < 0.35 ? 4.2 : rnd(1, 5.2);          // anillo perfecto o esfera
+            chisp.push({
+                x: px, y: py, vx: Math.cos(ang) * v, vy: Math.sin(ang) * v,
+                a: 1, h: hue + rnd(-18, 18), dec: rnd(0.011, 0.02)
+            });
+        }
+        campana(azar([523, 659, 784, 1047]));
+    }
+    function lanzarCohete() {
+        cohetes.push({
+            x: rnd(0.12, 0.88) * FW, y: FH + 10, vy: -rnd(9.5, 13),
+            meta: rnd(0.14, 0.46) * FH, h: Math.floor(rnd(0, 360))
+        });
+    }
+    function fCuadro(ts) {
+        if (!fCorre) return;
+        fx.globalCompositeOperation = 'destination-out';
+        fx.fillStyle = 'rgba(0,0,0,.22)';
+        fx.fillRect(0, 0, FW, FH);
+        fx.globalCompositeOperation = 'lighter';
+
+        if (ts < fFin && ts > fSig) { lanzarCohete(); if (Math.random() < 0.4) lanzarCohete(); fSig = ts + rnd(260, 520); }
+
+        for (var i = cohetes.length - 1; i >= 0; i--) {
+            var r = cohetes[i];
+            r.y += r.vy; r.vy *= 0.985;
+            fx.fillStyle = 'hsl(' + r.h + ',100%,75%)';
+            fx.beginPath(); fx.arc(r.x, r.y, 2.2, 0, 6.283); fx.fill();
+            if (r.y <= r.meta || r.vy > -2.2) { explotar(r.x, r.y, r.h); cohetes.splice(i, 1); }
+        }
+        for (var j = chisp.length - 1; j >= 0; j--) {
+            var p = chisp[j];
+            p.vx *= 0.985; p.vy = p.vy * 0.985 + 0.05;
+            p.x += p.vx; p.y += p.vy; p.a -= p.dec;
+            if (p.a <= 0) { chisp.splice(j, 1); continue; }
+            fx.fillStyle = 'hsla(' + p.h + ',100%,' + (55 + p.a * 25) + '%,' + p.a + ')';
+            fx.beginPath(); fx.arc(p.x, p.y, 1.2 + p.a * 1.6, 0, 6.283); fx.fill();
+        }
+        if (ts > fFin && !cohetes.length && !chisp.length) {
+            fCorre = false;
+            fx.globalCompositeOperation = 'source-over';
+            fx.clearRect(0, 0, FW, FH);
+            return;
+        }
+        requestAnimationFrame(fCuadro);
+    }
+    function fuegos(ms) {
+        if (!fx || reducir) return;
+        fFin = performance.now() + (ms || 7000);
+        fSig = 0;
+        if (!fCorre) { fCorre = true; requestAnimationFrame(fCuadro); }
+    }
+
+    /* ── Regalo que abre los avisos de éxito (Navidad / Invierno) ── */
+    var regalo = $('nxRegalo'), textoRegalo = $('nxRegaloTexto'), tAbrir = null;
+    function abrirRegalo() {
+        if (!regalo || regalo.classList.contains('abierto')) return;
+        clearTimeout(tAbrir);
+        regalo.classList.add('abierto');
+        var r = regalo.getBoundingClientRect();
+        confeti(r.left + r.width / 2, r.top + r.height * 0.45, 46);
+        campana(1047);
+        setTimeout(function () { regalo.classList.remove('visible'); }, 6500);
+    }
+    function prepararAviso() {
+        if (reducir || !activo()) return;
+        var aviso = document.querySelector('.erp-alert-success');
+        if (!aviso) return;
+        var copia = aviso.cloneNode(true);
+        var cerrar = copia.querySelector('button');
+        if (cerrar) cerrar.remove();
+        var msg = (copia.textContent || '').replace(/\s+/g, ' ').trim();
+        if (!msg) return;
+        if (esHallo()) { setTimeout(function () { mostrarToast('🎃 ' + msg, 5000); }, 600); return; }
+        textoRegalo.textContent = msg;
+        setTimeout(function () {
+            regalo.classList.add('visible');
+            tAbrir = setTimeout(abrirRegalo, 3200);
+        }, 700);
+    }
+    if (regalo) {
+        regalo.addEventListener('click', abrirRegalo);
+        regalo.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirRegalo(); }
+        });
+    }
+    prepararAviso();
+
+    /* ── Estrella fugaz que se puede tocar ── */
+    var est = $('nxEstrella'), animEst = null;
+    function finEstrella() { if (est) est.classList.remove('vuela'); animEst = null; }
+    function lanzarEstrella() {
+        if (!est || !activo() || document.hidden || reducir || animEst) return;
+        var W = window.innerWidth, H = window.innerHeight;
+        var x0 = rnd(0.05, 0.55) * W, y0 = rnd(0.14, 0.38) * H;
+        var dist = Math.min(W * 0.5, 520), ang = 28 * Math.PI / 180;
+        var dx = Math.cos(ang) * dist, dy = Math.sin(ang) * dist;
+        function pos(f, op, off) {
+            var k = { transform: 'translate(' + (x0 + dx * f).toFixed(1) + 'px,' + (y0 + dy * f).toFixed(1) + 'px) rotate(28deg)', opacity: op };
+            if (off !== undefined) k.offset = off;
+            return k;
+        }
+        est.classList.add('vuela');
+        animEst = est.animate([pos(0, 0), pos(0.15, 1, 0.15), pos(0.85, 1, 0.8), pos(1, 0)],
+                              { duration: 2800, easing: 'linear' });
+        animEst.onfinish = animEst.oncancel = finEstrella;
+    }
+    function pedirDeseo() {
+        if (!animEst || !est) return;
+        var r = est.getBoundingClientRect();
+        animEst.cancel();
+        confeti(r.right, r.top, 24);
+        campana(1319);
+        mostrarToast('⭐ Deseo pedido: ' + azar(DESEOS));
+    }
+    if (est) {
+        est.addEventListener('click', pedirDeseo);
+        est.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pedirDeseo(); }
+        });
+    }
+    function programarEstrella(primera) {
+        setTimeout(function () { lanzarEstrella(); programarEstrella(false); },
+                   primera ? 9000 : rnd(25000, 50000));
+    }
+    programarEstrella(true);
+
+    /* ══════════ CÓDIGOS SECRETOS ══════════
+       1) ↑ ↑ ↓ ↓ ← → ← → B A  → ESPECTÁCULO (fuegos + aurora + lluvia + cartel)
+       2) escribir  nieve       → TORMENTA de nieve
+       3) escribir  regalo      → lluvia de regalos
+       4) tocar a Santa 7 veces rápido (celular) → ESPECTÁCULO
+       5) escribir  67          → MODO LOCURA (Santa haciendo el 6-7)              */
+    var SECRETO = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown', 'arrowleft', 'arrowright', 'arrowleft', 'arrowright', 'b', 'a'];
+    var avance = 0, enShow = false, buffer = '';
+
+    function lluvia(emojis, n) {
+        var cont = 0, id = setInterval(function () {
+            cae(azar(emojis));
+            if (++cont > (lite ? Math.round(n / 2) : n)) clearInterval(id);
+        }, 70);
+    }
+    function espectaculo() {
+        if (enShow || reducir) return;
+        enShow = true;
+        var hallo = esHallo();
+        mostrarCartel(hallo ? '🎃 ¡Código secreto! 🎃' : '🎅 ¡Código secreto! 🎄',
+                      hallo ? 'Noche de brujas desbloqueada' : 'Show navideño desbloqueado');
+        mostrarToast(hallo ? '🎃 ¡Lluvia de Halloween!' : '🎆 ¡Fuegos artificiales de Navidad!', 5200);
+        document.body.classList.add('fiesta');
+        acorde();
+        if (!hallo) {
+            fuegos(8000);
+            if (window.erpNieve) window.erpNieve.tormenta(8000);
+        }
+        confeti(window.innerWidth / 2, window.innerHeight * 0.45, 70);
+        lluvia(hallo ? ['🦇', '🎃', '👻', '🕷️', '💀', '🍬', '🕸️', '🌼']
+                     : ['🦌', '🎁', '⭐', '🎄', '🔔', '🍬', '🧦', '❄️'], 90);
+        setTimeout(function () { document.body.classList.remove('fiesta'); enShow = false; }, 9500);
+    }
+    window.erpEspectaculo = espectaculo;
+
+    /* ══════════ MODO LOCURA: escribe  67  ══════════ */
+    var wrapL = $('locuraWrap'), santasL = $('locuraSantas'), enLocura = false;
+    (function () {
+        var grande = santasL && santasL.querySelector('.s67');
+        if (!grande) return;
+        var izq = grande.cloneNode(true), der = grande.cloneNode(true);
+        izq.classList.add('lado', 'a');
+        der.classList.add('lado', 'b');
+        santasL.insertBefore(izq, grande);
+        santasL.appendChild(der);
+    })();
+
+    function cae67() {
+        var p = document.createElement('span');
+        p.className = 'nx-part';
+        p.textContent = azar(['67', '67', '67', '6️⃣7️⃣', '🤪', '🎅', '🔥', '💥', '🦌', '🎁']);
+        p.setAttribute('aria-hidden', 'true');
+        p.style.left = rnd(0, window.innerWidth - 60) + 'px';
+        p.style.top = '-80px';
+        p.style.fontSize = rnd(28, 90) + 'px';
+        p.style.fontWeight = '900';
+        p.style.color = azar(COLORES);
+        p.style.textShadow = '0 0 14px currentColor, 0 3px 0 rgba(0,0,0,.4)';
+        document.body.appendChild(p);
+        var a = p.animate([
+            { transform: 'translate(0,0) rotate(0deg) scale(1)' },
+            { transform: 'translate(' + rnd(-160, 160) + 'px,' + (window.innerHeight * 0.5) + 'px) rotate(' + rnd(-540, 540) + 'deg) scale(1.4)', offset: 0.5 },
+            { transform: 'translate(' + rnd(-240, 240) + 'px,' + (window.innerHeight + 120) + 'px) rotate(' + rnd(-900, 900) + 'deg) scale(.8)' }
+        ], { duration: rnd(1800, 3400), easing: 'linear' });
+        a.onfinish = function () { p.remove(); };
+    }
+
+    function locura() {
+        if (enLocura || !wrapL) return;
+        enLocura = true;
+        var DUR = 13000, hallo = esHallo();
+        document.body.classList.add('locura');
+        wrapL.classList.remove('salida');
+        wrapL.classList.add('on');
+        mostrarCartel('🤪 ¡MODO LOCURA! 🤪', 'seis… siete…');
+        mostrarToast('6️⃣7️⃣ ¡SIX SEVEEEN! 🎅', 5000);
+        acorde();
+        if (window.erpNieve && !hallo) window.erpNieve.tormenta(DUR);
+        fuegos(DUR - 1500);
+        if (window.erpVillaLoca) window.erpVillaLoca(true);
+
+        var n = 0, idLluvia = setInterval(function () {
+            cae67();
+            if (++n > (lite ? 70 : 170)) clearInterval(idLluvia);
+        }, 70);
+        var idFiesta = setInterval(function () {
+            confeti(rnd(0.1, 0.9) * window.innerWidth, rnd(0.2, 0.7) * window.innerHeight, 30);
+            campana(azar([523, 659, 784, 880, 1047, 1319]));
+        }, 450);
+        confeti(window.innerWidth / 2, window.innerHeight * 0.5, 80);
+
+        setTimeout(function () {
+            clearInterval(idLluvia);
+            clearInterval(idFiesta);
+            wrapL.classList.add('salida');
+            setTimeout(function () {
+                wrapL.classList.remove('on', 'salida');
+                document.body.classList.remove('locura');
+                if (window.erpVillaLoca) window.erpVillaLoca(false);
+                enLocura = false;
+            }, 700);
+        }, DUR);
+    }
+    window.erpLocura = locura;
+
+    document.addEventListener('keydown', function (e) {
+        if (!activo() || !e.key) return;
+        if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+        var k = e.key.toLowerCase();
+
+        // Konami
+        if (k === SECRETO[avance]) {
+            avance++;
+            if (avance === SECRETO.length) { avance = 0; espectaculo(); }
+        } else {
+            avance = (k === SECRETO[0]) ? 1 : 0;
+        }
+
+        // Palabras secretas
+        if (k.length === 1) {
+            buffer = (buffer + k).slice(-8);
+            if (buffer.slice(-5) === 'nieve') {
+                buffer = '';
+                if (window.erpNieve && esNav()) {
+                    window.erpNieve.tormenta(9000);
+                    mostrarCartel('❄️ ¡Tormenta! ❄️', 'Palabra secreta: nieve');
+                    campana(1175);
+                }
+            } else if (buffer.slice(-6) === 'regalo') {
+                buffer = '';
+                mostrarToast('🎁 ¡Lluvia de regalos!', 4000);
+                campana(1047);
+                lluvia(['🎁', '🎀', '🎁', '⭐'], 40);
+            } else if (buffer.slice(-2) === '67') {
+                buffer = '';
+                locura();
+            }
+        }
+    });
+
+    /* ── Árbol interactivo: cada clic cambia los colores de sus luces ── */
+    var arb = document.querySelector('.arbolito');
+    function clicArbol() {
+        if (!esNav()) return;
+        var luces = arb.querySelectorAll('.lu');
+        for (var i = 0; i < luces.length; i++) luces[i].setAttribute('fill', azar(LUCES));
+        var r = arb.getBoundingClientRect();
+        chispas(r.left + r.width / 2, r.top + 10, ['✨', '⭐', '🔔'], 8);
+        campana(azar([880, 988, 1175]));
+    }
+    if (arb) {
+        arb.setAttribute('role', 'button');
+        arb.setAttribute('tabindex', '0');
+        arb.setAttribute('aria-label', 'Árbol de Navidad: haz clic para cambiar las luces');
+        arb.addEventListener('click', clicArbol);
+        arb.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); clicArbol(); }
+        });
+    }
+
+    /* ── Santa: frases, pistas del código secreto y 7 toques rápidos = show ── */
+    var santa = $('santaW'), bur = $('santaBurbuja'), iFrase = 0, tBur = null, toques = [];
+    function frases() {
+        var f = window.erpFaltan ? window.erpFaltan() : { navidad: false, d: 0 };
+        var dias = f.navidad ? '¡Hoy es Navidad!' : 'Faltan ' + f.d + ' días para Navidad 🎄';
+        return ['¡Ho ho ho! 🎅', dias, '¡Felices fiestas! ✨', '¿Ya revisaste tus ventas? 🎁',
+                '¡Toca la caja de música! 🎶', 'Toca el arbolito: cambia sus luces 🎄',
+                'Psst… prueba ↑ ↑ ↓ ↓ ← → ← → B A 🤫',
+                'Escribe la palabra «nieve» con el teclado ❄️',
+                'Toca la estrella fugaz y pide un deseo ⭐',
+                'Psst… escribe 67 con el teclado 🤪',
+                'En celular: tócame 7 veces rápido 😉',
+                'Tus clientes ya están en la lista de los buenos 😉'];
+    }
+    function decir(txt) {
+        if (!bur) return;
+        var l = frases();
+        bur.textContent = (typeof txt === 'string') ? txt : l[iFrase++ % l.length];
+        bur.classList.add('ver');
+        clearTimeout(tBur);
+        tBur = setTimeout(function () { bur.classList.remove('ver'); }, 4600);
+    }
+    if (santa && bur) {
+        santa.addEventListener('click', function () {
+            var ahora = Date.now();
+            toques = toques.filter(function (t) { return ahora - t < 3500; });
+            toques.push(ahora);
+            santa.classList.remove('salta'); void santa.offsetWidth; santa.classList.add('salta');
+            if (toques.length >= 7) { toques = []; decir('¡Lo descubriste! 🎆'); espectaculo(); }
+            else if (toques.length >= 4) decir('¡Sigue! ' + (7 - toques.length) + ' más… 🤫');
+            else decir();
+        });
+        setTimeout(decir, 2500);
+        setInterval(decir, 22000);
+    }
+
+    /* ── Calabaza de Halloween ── */
+    var cal = $('halloCalabaza');
+    if (cal) {
+        cal.addEventListener('click', function () {
+            var r = cal.getBoundingClientRect();
+            chispas(r.left + r.width / 2, r.top + 10, ['🦇', '👻', '🎃', '🕷️', '💀'], 10);
+            campana(262);
+            mostrarToast(azar(['🎃 ¡Buuu!', '👻 ¿Me viste?', '🦇 ¡Cuidado con los murciélagos!', '💀 ¡Feliz Día de Muertos!']), 2800);
+        });
+    }
+
+    /* ── Parallax del cielo con el mouse ── */
+    if (!lite) {
+        var cielo = $('cielo'), pend = false, ptx = 0, pty = 0;
+        window.addEventListener('mousemove', function (e) {
+            ptx = e.clientX / window.innerWidth - 0.5;
+            pty = e.clientY / window.innerHeight - 0.5;
+            if (pend) return;
+            pend = true;
+            requestAnimationFrame(function () {
+                pend = false;
+                if (cielo) { cielo.style.setProperty('--px', ptx.toFixed(3)); cielo.style.setProperty('--py', pty.toFixed(3)); }
+            });
+        }, { passive: true });
+    }
+
+    /* ── Estela de chispas del cursor (solo temas navideños) ── */
+    if (!lite) {
+        var ultimo = 0;
+        window.addEventListener('mousemove', function (e) {
+            if (!esNav()) return;
+            var ahora = performance.now();
+            if (ahora - ultimo < 55) return;
+            ultimo = ahora;
+            var p = document.createElement('span');
+            p.className = 'nx-part';
+            p.textContent = '✦';
+            p.setAttribute('aria-hidden', 'true');
+            p.style.left = e.clientX + 'px';
+            p.style.top  = e.clientY + 'px';
+            p.style.fontSize = rnd(8, 15) + 'px';
+            p.style.color = azar(['#FFE600', '#FFFFFF', '#7DF9FF', '#FFB3C1']);
+            p.style.textShadow = '0 0 8px currentColor';
+            document.body.appendChild(p);
+            var a = p.animate([
+                { transform: 'translate(0,0) scale(1)', opacity: .9 },
+                { transform: 'translate(' + rnd(-14, 14) + 'px,' + rnd(10, 30) + 'px) scale(.2)', opacity: 0 }
+            ], { duration: 700, easing: 'ease-out' });
+            a.onfinish = function () { p.remove(); };
+        }, { passive: true });
+    }
+
+    /* ── Tarjetas: inclinación 3D + brillo que sigue al mouse ── */
+    if (!lite) {
+        document.querySelectorAll('.erp-card').forEach(function (card) {
+            var brillo = document.createElement('div');
+            brillo.className = 'erp-brillo';
+            card.appendChild(brillo);
+            card.addEventListener('mousemove', function (e) {
+                var r = card.getBoundingClientRect();
+                var px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+                card.style.setProperty('--ry', ((px - 0.5) * 5).toFixed(2) + 'deg');
+                card.style.setProperty('--rx', ((0.5 - py) * 4).toFixed(2) + 'deg');
+                card.style.setProperty('--mx', (px * 100).toFixed(1) + '%');
+                card.style.setProperty('--my', (py * 100).toFixed(1) + '%');
+            });
+            card.addEventListener('mouseleave', function () {
+                card.style.setProperty('--rx', '0deg');
+                card.style.setProperty('--ry', '0deg');
+            });
+        });
+    }
+
+    /* ── Barra de progreso del scroll + botón de subir ── */
+    var barra = $('barraScroll'), subir = $('btnSubir'), pendS = false;
+    function alScroll() {
+        pendS = false;
+        var max = document.documentElement.scrollHeight - window.innerHeight;
+        var pct = max > 0 ? Math.min(window.scrollY / max, 1) : 0;
+        if (barra) barra.style.transform = 'scaleX(' + pct.toFixed(4) + ')';
+        if (subir) subir.classList.toggle('ver', window.scrollY > 400);
+    }
+    window.addEventListener('scroll', function () {
+        if (!pendS) { pendS = true; requestAnimationFrame(alScroll); }
+    }, { passive: true });
+    if (subir) subir.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: reducir ? 'auto' : 'smooth' });
+    });
+    alScroll();
+})();
+</script>
+
+<!-- Botón de nieve + Santa gigante + villa con gente -->
+<script>
+(function () {
+    var html = document.documentElement;
+
+    /* ── Botón para desactivar la nieve (se recuerda) ── */
+    var btn = document.getElementById('btnNieve');
+    function aplicarNieve(off) {
+        if (off) html.setAttribute('data-sinnieve', '1'); else html.removeAttribute('data-sinnieve');
+        if (btn) {
+            btn.setAttribute('aria-pressed', off ? 'true' : 'false');
+            btn.title = off ? 'Poner la nieve' : 'Quitar la nieve';
+        }
+        try { localStorage.setItem('erpSinNieve', off ? '1' : '0'); } catch (e) {}
+    }
+    var guardado = null;
+    try { guardado = localStorage.getItem('erpSinNieve'); } catch (e) {}
+    aplicarNieve(guardado === '1');
+    if (btn) btn.addEventListener('click', function () {
+        aplicarNieve(!html.hasAttribute('data-sinnieve'));
+    });
+
+    /* ── Santa gigante: clon del chico (también saluda) ── */
+    var chico = document.querySelector('#santaW .santa-svg');
+    var gig = document.getElementById('santaGigante');
+    if (chico && gig) {
+        gig.appendChild(chico.cloneNode(true));
+        var dichos = ['¡HO HO HO! 🎅', '¡Soy el Santa gigante! 😎', '¿Ya vendiste hoy? 🎁', '¡Felices fiestas! ✨'];
+        var i = 0;
+        gig.addEventListener('click', function () {
+            gig.classList.remove('salta'); void gig.offsetWidth; gig.classList.add('salta');
+            if (window.erpToast) window.erpToast(dichos[i++ % dichos.length], 2500);
+        });
+    }
+
+    /* ── Villa pequeña ── */
+    var casas = document.getElementById('villaCasas');
+    if (casas) {
+        var s = '', xs = [30, 150, 290, 420, 560, 700, 830, 980, 1110, 1250, 1380, 1500];
+        xs.forEach(function (x, k) {
+            var w = 46 + (k % 3) * 8;
+            s += '<use href="#casa" x="' + x + '" y="' + (64 - w * 0.9) + '" width="' + w + '" height="' + (w * 0.9) + '"/>';
+            if (k % 2 === 0) s += '<polygon points="' + (x + w + 10) + ',64 ' + (x + w + 18) + ',34 ' + (x + w + 26) + ',64" fill="#0A2216"/>' +
+                                  '<polygon points="' + (x + w + 13) + ',44 ' + (x + w + 18) + ',34 ' + (x + w + 23) + ',44" fill="#EAF3FA"/>';
+        });
+        casas.innerHTML = s;
+    }
+
+    /* Personajes pixelados (estilo Steve, CJ, aldeano, elfo...) */
+    function gorro(c, borla) {
+        return '<rect x="4" y="0" width="8" height="3" fill="' + c + '"/><rect x="5" y="-3" width="6" height="3" fill="' + c + '"/>' +
+               '<rect x="8" y="-5" width="4" height="2" fill="' + c + '"/><rect x="3" y="2" width="10" height="2" fill="#FFF"/>' +
+               '<rect x="11" y="-7" width="2" height="2" fill="' + borla + '"/>';
+    }
+    function persona(o) {
+        var manga = o.manga || o.camisa;
+        return '<svg viewBox="0 -8 16 40" shape-rendering="crispEdges"><g class="cuerpo">' +
+            '<g class="pierna a"><rect x="4" y="20" width="4" height="12" fill="' + o.pantalon + '"/><rect x="4" y="29" width="4" height="3" fill="#333"/></g>' +
+            '<g class="pierna b"><rect x="8" y="20" width="4" height="12" fill="' + o.pantalon + '"/><rect x="8" y="29" width="4" height="3" fill="#333"/></g>' +
+            '<g class="brazo a"><rect x="0" y="10" width="4" height="10" fill="' + manga + '"/><rect x="0" y="17" width="4" height="3" fill="' + o.piel + '"/></g>' +
+            '<rect x="4" y="10" width="8" height="10" fill="' + o.camisa + '"/>' +
+            '<g class="brazo b"><rect x="12" y="10" width="4" height="10" fill="' + manga + '"/><rect x="12" y="17" width="4" height="3" fill="' + o.piel + '"/></g>' +
+            '<rect x="4" y="2" width="8" height="8" fill="' + o.piel + '"/>' +
+            '<rect x="4" y="2" width="8" height="3" fill="' + o.pelo + '"/>' +
+            '<rect x="5" y="6" width="2" height="1" fill="#FFF"/><rect x="6" y="6" width="1" height="1" fill="' + (o.ojo || '#3A2A8A') + '"/>' +
+            '<rect x="9" y="6" width="2" height="1" fill="#FFF"/><rect x="9" y="6" width="1" height="1" fill="' + (o.ojo || '#3A2A8A') + '"/>' +
+            '<rect x="6" y="8" width="4" height="1" fill="rgba(0,0,0,.35)"/>' +
+            (o.extra || '') + '</g></svg>';
+    }
+
+    var GENTE = [
+        // Steve (Minecraft)
+        { d: 38, dl: 0,   inv: 0, o: { piel: '#C58C6B', pelo: '#4B3321', camisa: '#00A8A8', pantalon: '#3C44AA' } },
+        // CJ (GTA SA): musculosa blanca, jeans, gorro verde
+        { d: 46, dl: -12, inv: 1, o: { piel: '#6B4226', pelo: '#2E8B57', camisa: '#F4F4F4', manga: '#6B4226', pantalon: '#2D4F8E', ojo: '#111' } },
+        // Aldeano (nariz grande)
+        { d: 56, dl: -30, inv: 0, o: { piel: '#C49A7A', pelo: '#C49A7A', camisa: '#7A5230', pantalon: '#7A5230', ojo: '#2E7D32',
+              extra: '<rect x="7" y="6" width="2" height="4" fill="#A9805F"/><rect x="4" y="5" width="8" height="1" fill="#3A2A1A"/>' } },
+        // Elfo navideño
+        { d: 34, dl: -5,  inv: 1, o: { piel: '#F2C9A5', pelo: '#8B5A2B', camisa: '#2E9E5B', pantalon: '#C62A3C', ojo: '#222', extra: gorro('#2E9E5B', '#F0C45A') } },
+        // Persona con gorro de Santa
+        { d: 50, dl: -22, inv: 0, o: { piel: '#F2C9A5', pelo: '#2B1B12', camisa: '#E04656', pantalon: '#333A4A', ojo: '#222', extra: gorro('#D6384B', '#FFF') } },
+        // Otro vecino
+        { d: 62, dl: -40, inv: 1, o: { piel: '#8D5A3B', pelo: '#111', camisa: '#F0C45A', pantalon: '#555', ojo: '#111' } }
+    ];
+    var cont = document.getElementById('villaGente');
+    if (cont) {
+        cont.innerHTML = GENTE.map(function (g) {
+            return '<div class="pj' + (g.inv ? ' inv' : '') + '" style="--d:' + g.d + 's;--dl:' + g.dl + 's">' + persona(g.o) + '</div>';
+        }).join('');
+    }
+
+    /* Modo locura: aparece una multitud corriendo */
+    window.erpVillaLoca = function (on) {
+        if (!cont) return;
+        cont.querySelectorAll('.pj.extra').forEach(function (n) { n.remove(); });
+        if (!on) return;
+        var h = '';
+        for (var k = 0; k < 14; k++) {
+            var g = GENTE[k % GENTE.length];
+            h += '<div class="pj extra' + (k % 2 ? ' inv' : '') + '" style="--d:' + (3 + Math.random() * 4).toFixed(1) +
+                 's;--dl:-' + (Math.random() * 6).toFixed(1) + 's">' + persona(g.o) + '</div>';
+        }
+        cont.insertAdjacentHTML('beforeend', h);
+    };
+})();
+</script>
+
+<!-- Selector de temas: Navidad ⇄ Noche ártica ⇄ Automático
+     (Halloween y Normal solo salen solos, según la fecha) -->
+<script>
+(function () {
+    var html = document.documentElement;
+    var ICONOS  = { auto: '🗓️', navidad: '🎄', invierno: '❄️' };
+    var NOMBRES = { auto: 'Automático (según la fecha)', navidad: 'Navidad', invierno: 'Noche ártica' };
+    var MARCA   = { navidad: '🎄', invierno: '❄️', halloween: '🎃', normal: '🏢' };
+    var PIE     = {
+        navidad:   '🎄 Mi ERP · Hecho con Django 4.2 LTS · Felices fiestas ✨',
+        invierno:  '❄️ Mi ERP · Hecho con Django 4.2 LTS · Felices fiestas ✨',
+        halloween: '🎃 Mi ERP · Hecho con Django 4.2 LTS · ¡Feliz Halloween! 👻',
+        normal:    'Mi ERP · Hecho con Django 4.2 LTS'
+    };
+
+    // Por si el script del <head> no hubiera cargado
+    if (!window.erpAplicarTema) {
+        window.erpAplicarTema = function (modo) {
+            var fijo = (modo === 'navidad' || modo === 'invierno');
+            html.setAttribute('data-theme', fijo ? modo : 'navidad');
+            html.setAttribute('data-modo', fijo ? modo : 'auto');
+        };
+    }
+
+    function etiquetas() {
+        var t = html.getAttribute('data-theme');
+        var modo = html.getAttribute('data-modo') || 'auto';
+        var e = document.getElementById('brandEmoji');
+        var p = document.getElementById('footerTxt');
+        var btn = document.getElementById('themeBtn');
+        if (e) e.textContent = MARCA[t] || '';
+        if (p) p.textContent = PIE[t] || '';
+        if (btn) {
+            btn.textContent = ICONOS[modo] || ICONOS.auto;
+            btn.title = 'Tema: ' + (NOMBRES[modo] || NOMBRES.auto) + ' · clic para cambiar';
+        }
+    }
+    etiquetas();
+
+    // Siempre hay un cambio visible: Navidad → Noche ártica → Automático → …
+    function siguiente() {
+        var modo = html.getAttribute('data-modo') || 'auto';
+        var actual = html.getAttribute('data-theme');
+        if (modo === 'navidad') return 'invierno';
+        if (modo === 'invierno') return 'auto';
+        return actual === 'navidad' ? 'invierno' : 'navidad';   // venía de automático
+    }
+
+    // Delegado en document: funciona aunque el botón se cargue después
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest ? e.target.closest('#themeBtn') : null;
+        if (!btn) return;
+        var sig = siguiente();
+        window.erpAplicarTema(sig);
+        try { localStorage.setItem('erpTemaV6', sig); } catch (err) {}
+        etiquetas();
+        if (window.erpToast && html.getAttribute('data-theme') !== 'normal') {
+            window.erpToast((ICONOS[sig] || '') + ' ' + NOMBRES[sig], 2200);
+        }
+    });
+})();
+</script>
+
 {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -18,40 +18,40 @@ def bienvenida(request):
     """
     modulos = [
         {
-            'nombre': 'La despensa embrujada',
-            'icono': '🎃',
+            'nombre': 'Productos',
+            'icono': '📦',
             'url': reverse('productos:lista'),
-            'descripcion': 'Productos, precios y existencias bajo vigilancia',
+            'descripcion': 'Productos, precios y existencias',
         },
         {
-            'nombre': 'Los visitantes de la noche',
-            'icono': '🧛',
+            'nombre': 'Clientes',
+            'icono': '👥',
             'url': reverse('clientes:lista'),
             'descripcion': 'Quién te compra y cómo contactarlo',
         },
         {
-            'nombre': 'Los brujos proveedores',
-            'icono': '🧙',
+            'nombre': 'Proveedores',
+            'icono': '🚚',
             'url': reverse('proveedores:lista'),
-            'descripcion': 'Quién te surte la poción y a qué precio',
+            'descripcion': 'Quién te surte y a qué precio',
         },
         {
-            'nombre': 'El caldero de ventas',
-            'icono': '🍬',
+            'nombre': 'Ventas',
+            'icono': '🛒',
             'url': reverse('ventas:lista'),
-            'descripcion': 'Pedidos y cobros: el botín de la noche',
+            'descripcion': 'Pedidos y cobros',
         },
         {
-            'nombre': 'La bola de cristal',
-            'icono': '🔮',
+            'nombre': 'Reportes',
+            'icono': '📊',
             'url': reverse('reportes:inicio'),
             'descripcion': 'Mira cómo va tu negocio en números',
         },
         {
-            'nombre': 'El laboratorio secreto',
-            'icono': '🦇',
+            'nombre': 'Administración',
+            'icono': '⚙️',
             'url': '/admin/',
-            'descripcion': 'Panel de administración para tus hechizos',
+            'descripcion': 'Panel de administración del sistema',
         },
     ]
     return render(request, 'bienvenida.html', {'modulos': modulos})

@@ -1,0 +1,349 @@
+<!-- navidad_extra.html — Extras navideños: regalo en los avisos, aurora, estrella fugaz, código secreto y campanitas. -->
+
+<style>
+.nx-root { display: none; }
+html[data-theme*="navid" i] .nx-root,
+html[data-theme*="christ" i] .nx-root { display: block; }
+
+/* ── Aurora boreal ── */
+.nx-aurora {
+    position: fixed; inset: 0 0 auto 0; height: 62vh; z-index: -1;
+    pointer-events: none; overflow: hidden; opacity: .5; mix-blend-mode: screen;
+}
+.nx-aurora i {
+    position: absolute; top: 0; width: 55%; height: 100%;
+    filter: blur(55px); animation: nx-onda 16s ease-in-out infinite alternate;
+}
+.nx-aurora i:nth-child(1) { left: -8%; background: linear-gradient(180deg, transparent 5%, #2BFF88 55%, transparent 95%); }
+.nx-aurora i:nth-child(2) { left: 28%; background: linear-gradient(180deg, transparent 5%, #00F0FF 55%, transparent 95%); animation-duration: 20s; animation-delay: -6s; }
+.nx-aurora i:nth-child(3) { left: 58%; background: linear-gradient(180deg, transparent 5%, #FF3DF2 55%, transparent 95%); animation-duration: 24s; animation-delay: -11s; opacity: .55; }
+@keyframes nx-onda {
+    from { transform: translateX(-7%) skewX(-9deg) scaleY(.85); }
+    to   { transform: translateX(9%) skewX(11deg) scaleY(1.12); }
+}
+
+/* ── Estrella fugaz ── */
+.nx-estrella {
+    position: fixed; top: 0; left: 0; width: 140px; height: 4px; z-index: 1650;
+    opacity: 0; pointer-events: none; cursor: pointer; transform-origin: 100% 50%;
+}
+.nx-estrella::before {
+    content: ""; position: absolute; inset: 0; border-radius: 4px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.9) 85%, #fff);
+    filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 12px #7DF9FF);
+}
+.nx-estrella::after { content: ""; position: absolute; inset: -16px -6px -16px -20px; }
+.nx-estrella.vuela { pointer-events: auto; }
+
+/* ── Regalo que abre los avisos ── */
+.nx-regalo {
+    position: fixed; top: 108px; left: 50%; width: 130px; z-index: 1800;
+    opacity: 0; pointer-events: none; cursor: pointer; text-align: center;
+    transform: translate(-50%, -24px) scale(.85);
+    transition: opacity .35s, transform .45s cubic-bezier(.34, 1.56, .64, 1);
+}
+.nx-regalo.visible { opacity: 1; pointer-events: auto; transform: translate(-50%, 0) scale(1); }
+.nx-regalo svg {
+    display: block; width: 100%; height: auto; overflow: visible;
+    filter: drop-shadow(0 0 14px rgba(255,46,99,.8));
+    animation: nx-rebota 1.2s ease-in-out infinite;
+}
+.nx-regalo.abierto svg { animation: none; }
+@keyframes nx-rebota {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50%      { transform: translateY(-8px) rotate(2deg); }
+}
+.nx-tapa {
+    transform-box: fill-box; transform-origin: 50% 100%;
+    transition: transform .6s cubic-bezier(.34, 1.56, .64, 1), opacity .5s .2s;
+}
+.nx-regalo.abierto .nx-tapa { transform: translate(-10px, -46px) rotate(-26deg); opacity: 0; }
+.nx-regalo-pista, .nx-regalo-texto {
+    position: absolute; top: calc(100% + 6px); left: 50%;
+    width: max-content; max-width: min(340px, 90vw);
+    padding: .5rem .95rem; border-radius: 12px;
+    background: #0B1F17; color: #F8FFF9; font-size: .88rem; font-weight: 600;
+    transform: translateX(-50%); pointer-events: none;
+}
+.nx-regalo-pista { border: 2px solid #FFE600; box-shadow: 0 0 14px rgba(255,230,0,.55); transition: opacity .25s; }
+.nx-regalo.abierto .nx-regalo-pista { opacity: 0; }
+.nx-regalo-texto {
+    border: 2px solid #2BFF88; box-shadow: 0 0 18px rgba(43,255,136,.6);
+    opacity: 0; transform: translateX(-50%) translateY(-6px);
+    transition: opacity .4s .25s, transform .4s .25s;
+}
+.nx-regalo.abierto .nx-regalo-texto { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── Aviso corto ── */
+.nx-toast {
+    position: fixed; top: 150px; left: 50%; z-index: 1800;
+    max-width: 90vw; text-align: center;
+    padding: .6rem 1.1rem; border-radius: 999px;
+    background: #0B1F17; color: #F8FFF9; font-size: .9rem; font-weight: 600;
+    border: 2px solid #00F0FF; box-shadow: 0 0 18px rgba(0,240,255,.6);
+    opacity: 0; pointer-events: none; transform: translate(-50%, -10px);
+    transition: opacity .3s, transform .3s;
+}
+.nx-toast.visible { opacity: 1; transform: translate(-50%, 0); }
+
+/* ── Botón de campanitas ── */
+.nx-sonido {
+    position: fixed; top: 96px; right: 14px; z-index: 1650;
+    width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+    border: 2px solid #FFE600; background: rgba(11,31,23,.85); color: #FFE600;
+    font-size: 1rem; opacity: .7; box-shadow: 0 0 10px rgba(255,230,0,.5);
+    transition: opacity .2s, transform .2s, background .2s;
+}
+.nx-sonido:hover { opacity: 1; transform: scale(1.08); }
+.nx-sonido[aria-pressed="true"] { opacity: 1; background: #FFE600; color: #0B1F17; }
+
+/* ── Partículas ── */
+.nx-part { position: fixed; z-index: 1900; pointer-events: none; will-change: transform, opacity; }
+.nx-conf { width: 8px; height: 12px; border-radius: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+    .nx-aurora i, .nx-regalo svg { animation: none; }
+}
+</style>
+
+<div class="nx-root" id="nxRoot">
+    <div class="nx-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+
+    <button type="button" class="nx-sonido" id="nxSonido" aria-pressed="false"
+            title="Activar o desactivar las campanitas">🔔</button>
+
+    <div class="nx-estrella" id="nxEstrella" role="button" tabindex="0"
+         aria-label="Estrella fugaz: haz clic para pedir un deseo"></div>
+
+    <div class="nx-toast" id="nxToast" role="status" aria-live="polite"></div>
+
+    <div class="nx-regalo" id="nxRegalo" role="button" tabindex="0"
+         aria-label="Regalo: haz clic para abrir el mensaje">
+        <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+            <rect x="20" y="54" width="80" height="58" rx="4" fill="#C71F4F"/>
+            <rect x="54" y="54" width="12" height="58" fill="#FFE600"/>
+            <g class="nx-tapa">
+                <rect x="14" y="30" width="92" height="24" rx="4" fill="#FF2E63"/>
+                <rect x="54" y="30" width="12" height="24" fill="#FFE600"/>
+                <path d="M60 30 C40 4 12 14 30 30 Z" fill="#FFE600"/>
+                <path d="M60 30 C80 4 108 14 90 30 Z" fill="#FFE600"/>
+                <circle cx="60" cy="30" r="5" fill="#FFB800"/>
+            </g>
+        </svg>
+        <div class="nx-regalo-pista">¡Tienes un mensaje! Ábrelo 🎁</div>
+        <div class="nx-regalo-texto" id="nxRegaloTexto"></div>
+    </div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+    var html    = document.documentElement;
+    var reducir = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var lite    = reducir || window.innerWidth < 700 ||
+                  (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2) ||
+                  (navigator.deviceMemory && navigator.deviceMemory <= 2);
+    var COLORES = ['#FF2E63', '#FF9F1C', '#FFE600', '#2BFF88', '#00F0FF', '#FF3DF2', '#F8FFF9'];
+    var DESEOS  = ['ventas que no paran 🛒', 'stock que nunca se acaba 📦', 'cero facturas perdidas 🧾',
+                   'clientes felices 😊', 'un servidor que no se cae 🖥️', 'más tiempo libre 🎄'];
+
+    function $(id)      { return document.getElementById(id); }
+    function azar(a)    { return a[Math.floor(Math.random() * a.length)]; }
+    function rnd(a, b)  { return a + Math.random() * (b - a); }
+    function activo()   { return /navid|christ|xmas/i.test(html.getAttribute('data-theme') || ''); }
+    function guardar(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+    function leer(k)       { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+    /* ── Campanitas (WebAudio, sin archivos) ── */
+    var audio = null, sonidoOn = false, btnSonido = $('nxSonido');
+    function crearAudio() {
+        if (audio) return;
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) audio = new AC();
+    }
+    function campana(freq) {
+        if (!sonidoOn || !audio) return;
+        if (audio.state === 'suspended') audio.resume();
+        var t = audio.currentTime;
+        [1, 2.76, 5.4].forEach(function (m, i) {
+            var o = audio.createOscillator(), g = audio.createGain();
+            o.type = 'sine';
+            o.frequency.value = freq * m;
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.16 / (i + 1), t + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+            o.connect(g); g.connect(audio.destination);
+            o.start(t); o.stop(t + 1.5);
+        });
+    }
+    sonidoOn = leer('nxSonido') === 'on';
+    if (btnSonido) {
+        btnSonido.setAttribute('aria-pressed', sonidoOn ? 'true' : 'false');
+        btnSonido.addEventListener('click', function () {
+            crearAudio();
+            sonidoOn = !sonidoOn;
+            btnSonido.setAttribute('aria-pressed', sonidoOn ? 'true' : 'false');
+            guardar('nxSonido', sonidoOn ? 'on' : 'off');
+            campana(880);
+        });
+    }
+    document.addEventListener('pointerdown', crearAudio, { once: true });
+    document.addEventListener('click', function (e) {
+        if (!sonidoOn || !activo() || !e.target.closest) return;
+        if (e.target.closest('.btn-erp-primary, .btn-erp-gold, .btn-erp-danger, .erp-nav-link, .santa-btn, .bola, #nxRegalo, #nxEstrella')) {
+            campana(azar([784, 880, 988, 1047]));
+        }
+    });
+
+    /* ── Aviso corto ── */
+    var toast = $('nxToast'), tToast = null;
+    function mostrarToast(txt, ms) {
+        if (!toast) return;
+        toast.textContent = txt;
+        toast.classList.add('visible');
+        clearTimeout(tToast);
+        tToast = setTimeout(function () { toast.classList.remove('visible'); }, ms || 4200);
+    }
+
+    /* ── Confeti y lluvia ── */
+    function confeti(x, y, n) {
+        if (reducir) return;
+        n = lite ? Math.round(n * 0.5) : n;
+        for (var i = 0; i < n; i++) {
+            var p = document.createElement('span');
+            p.className = 'nx-part nx-conf';
+            p.style.left = x + 'px';
+            p.style.top  = y + 'px';
+            p.style.background = azar(COLORES);
+            document.body.appendChild(p);
+            var dx = rnd(-160, 160), dy = rnd(-190, -60);
+            var a = p.animate([
+                { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+                { transform: 'translate(' + dx + 'px,' + dy + 'px) rotate(' + rnd(0, 360) + 'deg)', opacity: 1, offset: 0.35 },
+                { transform: 'translate(' + (dx * 1.3) + 'px,' + (dy + rnd(300, 460)) + 'px) rotate(' + rnd(360, 900) + 'deg)', opacity: 0 }
+            ], { duration: rnd(1400, 2200), easing: 'cubic-bezier(.2,.6,.4,1)', fill: 'forwards' });
+            a.onfinish = (function (el) { return function () { el.remove(); }; })(p);
+        }
+    }
+    function cae(emoji) {
+        var p = document.createElement('span');
+        p.className = 'nx-part';
+        p.textContent = emoji;
+        p.setAttribute('aria-hidden', 'true');
+        p.style.left = rnd(0, window.innerWidth - 30) + 'px';
+        p.style.top = '-40px';
+        p.style.fontSize = rnd(20, 38) + 'px';
+        document.body.appendChild(p);
+        var a = p.animate([
+            { transform: 'translate(0,0) rotate(0deg)' },
+            { transform: 'translate(' + rnd(-80, 80) + 'px,' + (window.innerHeight + 80) + 'px) rotate(' + rnd(-360, 360) + 'deg)' }
+        ], { duration: rnd(2600, 4200), easing: 'linear' });
+        a.onfinish = function () { p.remove(); };
+    }
+
+    /* ── Regalo que abre los avisos de éxito ── */
+    var regalo = $('nxRegalo'), textoRegalo = $('nxRegaloTexto'), tAbrir = null;
+    function abrirRegalo() {
+        if (!regalo || regalo.classList.contains('abierto')) return;
+        clearTimeout(tAbrir);
+        regalo.classList.add('abierto');
+        var r = regalo.getBoundingClientRect();
+        confeti(r.left + r.width / 2, r.top + r.height * 0.45, 46);
+        campana(1047);
+        setTimeout(function () { regalo.classList.remove('visible'); }, 6500);
+    }
+    function prepararRegalo() {
+        if (!regalo || !activo() || reducir) return;
+        var aviso = document.querySelector('.erp-alert-success');
+        if (!aviso) return;
+        var copia = aviso.cloneNode(true);
+        var cerrar = copia.querySelector('button');
+        if (cerrar) cerrar.remove();
+        var msg = (copia.textContent || '').replace(/\s+/g, ' ').trim();
+        if (!msg) return;
+        textoRegalo.textContent = msg;
+        setTimeout(function () {
+            regalo.classList.add('visible');
+            tAbrir = setTimeout(abrirRegalo, 3200);
+        }, 700);
+    }
+    if (regalo) {
+        regalo.addEventListener('click', abrirRegalo);
+        regalo.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrirRegalo(); }
+        });
+    }
+    prepararRegalo();
+
+    /* ── Estrella fugaz ── */
+    var est = $('nxEstrella'), animEst = null;
+    function finEstrella() { if (est) est.classList.remove('vuela'); animEst = null; }
+    function lanzarEstrella() {
+        if (!est || !activo() || document.hidden || reducir || animEst) return;
+        var W = window.innerWidth, H = window.innerHeight;
+        var x0 = rnd(0.05, 0.55) * W, y0 = rnd(0.12, 0.35) * H;
+        var dist = Math.min(W * 0.5, 520), ang = 28 * Math.PI / 180;
+        var dx = Math.cos(ang) * dist, dy = Math.sin(ang) * dist;
+        function pos(f, op, off) {
+            var k = { transform: 'translate(' + (x0 + dx * f).toFixed(1) + 'px,' + (y0 + dy * f).toFixed(1) + 'px) rotate(28deg)', opacity: op };
+            if (off !== undefined) k.offset = off;
+            return k;
+        }
+        est.classList.add('vuela');
+        animEst = est.animate([pos(0, 0), pos(0.15, 1, 0.15), pos(0.85, 1, 0.8), pos(1, 0)],
+                              { duration: 2800, easing: 'linear' });
+        animEst.onfinish = animEst.oncancel = finEstrella;
+    }
+    function pedirDeseo() {
+        if (!animEst || !est) return;
+        var r = est.getBoundingClientRect();
+        animEst.cancel();
+        confeti(r.right, r.top, 24);
+        campana(1319);
+        mostrarToast('⭐ Deseo pedido: ' + azar(DESEOS));
+    }
+    if (est) {
+        est.addEventListener('click', pedirDeseo);
+        est.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pedirDeseo(); }
+        });
+    }
+    function programarEstrella(primera) {
+        setTimeout(function () { lanzarEstrella(); programarEstrella(false); },
+                   primera ? 9000 : rnd(25000, 50000));
+    }
+    programarEstrella(true);
+
+    /* ── Código secreto (Konami) ── */
+    var SECRETO = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown', 'arrowleft', 'arrowright', 'arrowleft', 'arrowright', 'b', 'a'];
+    var avance = 0, lloviendo = false;
+    function lluvia() {
+        if (lloviendo || reducir) return;
+        lloviendo = true;
+        mostrarToast('🎅 ¡Código secreto! Lluvia de Navidad', 5200);
+        campana(1175);
+        var emojis = ['🦌', '🎁', '⭐', '🎄', '🔔', '🍬', '🧦', '❄️'];
+        var n = 0, id = setInterval(function () {
+            cae(azar(emojis));
+            if (++n > (lite ? 45 : 90)) { clearInterval(id); lloviendo = false; }
+        }, 70);
+    }
+    document.addEventListener('keydown', function (e) {
+        if (!activo() || !e.key) return;
+        if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+        var k = e.key.toLowerCase();
+        if (k === SECRETO[avance]) {
+            avance++;
+            if (avance === SECRETO.length) { avance = 0; lluvia(); }
+        } else {
+            avance = (k === SECRETO[0]) ? 1 : 0;
+        }
+    });
+
+    /* ── Aurora: se apaga en equipos lentos ── */
+    if (lite) {
+        var aurora = document.querySelector('.nx-aurora');
+        if (aurora) aurora.style.display = 'none';
+    }
+})();
+</script>

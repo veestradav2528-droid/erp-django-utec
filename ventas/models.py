@@ -1,5 +1,5 @@
 # ventas/models.py
-"""Modelos de la app ventas — Espiral 2 W05/W06.
+"""Modelos de la app ventas — Espiral 2 W05/W06 + W15.
 
 Modelos implementados:
     Venta        — encabezado de una venta interna.
@@ -13,9 +13,9 @@ Decisiones de diseño aplicadas:
     D-06: DetalleVenta.precio_unitario → almacenado (histórico).
 
 W06: clean() en DetalleVenta y Pedido + validator en Pedido.total_pagado.
+W15: Pedido.items_snapshot (copia del carrito para el webhook de Stripe).
 """
 
-from django.core.exceptions import ValidationError
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
@@ -176,17 +176,24 @@ class Pedido(models.Model):
     fecha_entrega = models.DateField(
         null=True, blank=True, verbose_name='Fecha de entrega'
     )
-    # En la clase Pedido, reemplazar el campo total_pagado:
-
     total_pagado  = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         null=True,
         blank=True,
-        validators=[MinValueValidator(Decimal('0.00'))],  # ← agregar
+        validators=[MinValueValidator(Decimal('0.00'))],
         verbose_name='Total pagado'
     )
-
+    items_snapshot = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name='Snapshot de items del carrito',
+        help_text=(
+            'Copia del carrito al momento de crear el pedido. '
+            'Estructura: [{"producto_id": 1, "nombre": "...", '
+            '"cantidad": 2, "precio": "500.00"}]'
+        )
+    )
 
     class Meta:
         verbose_name        = 'Pedido'

@@ -3,50 +3,78 @@
 
 {% block extra_css %}
 <style>
+    .inicio-hero { padding: 2.5rem 0 1.5rem; }
+
     .inicio-titulo {
-        font-family: 'Playfair Display', serif;
+        font-family: 'Inter', system-ui, sans-serif;
+        font-weight: 700;
+        font-size: 2.6rem;
+        letter-spacing: -.02em;
         color: var(--clr-navy);
-        font-size: 2.4rem;
-        letter-spacing: .02em;
+        margin-bottom: .5rem;
     }
-    .inicio-nombre { color: var(--clr-navy); }
+    .inicio-sub {
+        color: var(--clr-muted);
+        font-size: 1.1rem;
+        max-width: 560px;
+        margin: 0 auto;
+    }
+    .inicio-nombre {
+        color: var(--clr-navy);
+        font-size: 1.1rem;
+        display: block;
+        margin-top: .5rem;
+    }
+
+    /* Temas oscuros: texto claro para que siempre se lea */
     [data-theme="dark"] .inicio-titulo,
     [data-theme="dark"] .inicio-nombre,
     [data-theme="halloween"] .inicio-titulo,
-    [data-theme="halloween"] .inicio-nombre { color: var(--clr-sky); }
+    [data-theme="halloween"] .inicio-nombre,
+    [data-theme="navidad"] .inicio-titulo,
+    [data-theme="navidad"] .inicio-nombre { color: var(--clr-sky); }
 
-    /* Resplandor naranja solo en Halloween */
-    [data-theme="halloween"] .inicio-titulo {
-        text-shadow: 0 0 18px rgba(255,117,24,.55);
+    /* Tarjetas */
+    .inicio-card {
+        cursor: pointer;
+        height: 100%;
+        padding: 1.75rem 1.25rem;
+        border-radius: 16px;
+        transition: transform .2s ease, box-shadow .2s ease;
     }
-    .inicio-bichos { font-size: 1.4rem; letter-spacing: .6rem; margin-top: .5rem; }
+    .inicio-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, .25);
+    }
+    .inicio-icono { font-size: 2.2rem; line-height: 1; }
+    .inicio-desc {
+        color: var(--clr-muted);
+        font-size: .9rem;
+        margin: .35rem 0 0;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="text-center py-4">
-    <h1 class="inicio-titulo">🎃 Bienvenido a la cripta del ERP</h1>
-    <p style="color:var(--clr-muted);font-size:1.05rem;">
-        Aquí se guardan tus productos, tus ventas... y algún que otro fantasma
+<div class="text-center inicio-hero">
+    <h1 class="inicio-titulo">Bienvenido a Mi ERP</h1>
+    <p class="inicio-sub">
+        Gestiona productos, clientes, proveedores y ventas en un solo lugar.
     </p>
-    <div class="inicio-bichos">🦇 👻 🕷️ 💀 🦇</div>
     <div class="d-flex justify-content-center gap-2 mt-3 flex-wrap">
         <span class="badge-erp-gold">Django 4.2 LTS</span>
         <span class="badge-erp-gold">Python 3.11</span>
-        <span class="badge-erp-gold">Edición Halloween 🎃</span>
     </div>
 </div>
 
-<div class="row g-3 mt-2">
+<div class="row g-4 mt-1">
     {% for m in modulos %}
     <div class="col-md-4">
-        <div class="erp-card text-center"
-             style="cursor:pointer;" onclick="window.location='{{ m.url }}'">
-            <div style="font-size:2rem;margin-bottom:.4rem;">{{ m.icono }}</div>
+        <div class="erp-card text-center inicio-card"
+             onclick="window.location='{{ m.url }}'">
+            <div class="inicio-icono">{{ m.icono }}</div>
             <strong class="inicio-nombre">{{ m.nombre }}</strong>
-            <p style="color:var(--clr-muted);font-size:.85rem;margin:.3rem 0 0;">
-                {{ m.descripcion }}
-            </p>
+            <p class="inicio-desc">{{ m.descripcion }}</p>
         </div>
     </div>
     {% endfor %}
