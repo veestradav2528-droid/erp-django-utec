@@ -1,0 +1,4 @@
+.env
+env_erp/
+__pycache__/
+*.pyc

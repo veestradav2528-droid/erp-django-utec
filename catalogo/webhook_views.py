@@ -1,5 +1,5 @@
 # catalogo/webhook_views.py
-"""Endpoint de webhook para recibir eventos de Stripe — W15.
+"""Endpoint de webhook para recibir eventos de Stripe — W15 + W16.
 
 Verificación de seguridad:
     Stripe firma cada evento con STRIPE_WEBHOOK_SECRET.
@@ -10,6 +10,7 @@ Verificación de seguridad:
 Eventos manejados:
     payment_intent.succeeded     → Pedido.estado = 'pagado'
                                     Descontar stock de productos
+                                    Encolar correo de confirmación (W16)
     payment_intent.payment_failed → Pedido.estado = 'cancelado'
 """
 import logging
@@ -23,6 +24,7 @@ from django.views.decorators.http import require_POST
 
 from productos.models import Producto
 from ventas.models    import Pedido
+from ventas.tasks     import enviar_confirmacion_pedido
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +94,8 @@ def stripe_webhook(request) -> HttpResponse:
 def _manejar_pago_exitoso(payment_intent: dict) -> None:
     """Procesa un pago confirmado por Stripe.
 
-    Actualiza el Pedido a 'pagado' y descuenta el stock de productos.
+    Actualiza el Pedido a 'pagado', descuenta el stock de productos
+    y encola el correo de confirmación (W16).
 
     Args:
         payment_intent: objeto PaymentIntent del evento de Stripe.
@@ -117,6 +120,13 @@ def _manejar_pago_exitoso(payment_intent: dict) -> None:
 
         # Descontar stock de cada producto del snapshot
         _descontar_stock(pedido)
+
+        # ── NUEVO W16: disparar tarea de confirmación ─────────────────
+        # El webhook es el lugar más confiable para disparar el correo:
+        # se ejecuta incluso si el usuario cerró el navegador antes de
+        # llegar a pago_exitoso().
+        enviar_confirmacion_pedido.delay(pedido.pk)
+        # ─────────────────────────────────────────────────────────────
     else:
         logger.info(
             f'Pedido {pedido.numero_pedido} ya estaba pagado — '

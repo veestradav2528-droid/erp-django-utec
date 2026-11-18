@@ -1,5 +1,5 @@
 # catalogo/views.py
-"""Vistas del módulo de catálogo, carrito y checkout — W13 + W14 + W15.
+"""Vistas del módulo de catálogo, carrito y checkout — W13 + W14 + W15 + W16.
 
 Módulo público (no requiere autenticación para lectura).
 El carrito se almacena en la sesión Django.
@@ -26,6 +26,7 @@ from django.views.generic import ListView
 
 from productos.models import Producto
 from ventas.models import DetalleVenta, Pedido
+from ventas.tasks import enviar_confirmacion_pedido
 
 from .checkout_utils import (
     calcular_totales,
@@ -314,19 +315,28 @@ def checkout(request):
 
 
 def pago_exitoso(request, pedido_id: int):
-    """Vista de confirmación post-pago exitoso.
+    """Vista de confirmación post-pago exitoso — W16.
 
-    Vacía el carrito de la sesión y muestra el número de pedido.
-    Stripe redirige aquí después de `stripe.confirmCardPayment` exitoso.
+    Cambios respecto a W14:
+        Dispara la tarea asíncrona de correo con .delay().
+        La tarea se encola en Redis y el worker la procesa
+        en segundo plano, sin bloquear esta respuesta HTTP.
     """
     pedido = get_object_or_404(Pedido, pk=pedido_id)
 
-    # Vaciar el carrito al confirmar el pago
+    # Vaciar el carrito de la sesión
     _guardar_carrito(request, {})
+
+    # ── NUEVO W16: disparar tarea asíncrona de confirmación ───────────
+    # .delay() envía la tarea al broker Redis de forma no bloqueante.
+    # El worker la ejecutará en segundo plano.
+    enviar_confirmacion_pedido.delay(pedido.pk)
+    # ──────────────────────────────────────────────────────────────────
+
     messages.success(
         request,
         f'¡Pago exitoso! Tu pedido {pedido.numero_pedido} '
-        f'está confirmado. Total: ${pedido.total_pagado}'
+        f'está confirmado. Recibirás un correo de confirmación pronto.'
     )
 
     return render(request, 'catalogo/pago_exitoso.html', {
