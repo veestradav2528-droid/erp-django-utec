@@ -1,5 +1,5 @@
 # ventas/models.py
-"""Modelos de la app ventas — Espiral 2 W05/W06 + W15.
+"""Modelos de la app ventas — Espiral 2 W05/W06 + W15 + W17.
 
 Modelos implementados:
     Venta        — encabezado de una venta interna.
@@ -14,6 +14,7 @@ Decisiones de diseño aplicadas:
 
 W06: clean() en DetalleVenta y Pedido + validator en Pedido.total_pagado.
 W15: Pedido.items_snapshot (copia del carrito para el webhook de Stripe).
+W17: Pedido.correo_enviado (idempotencia del correo de confirmación).
 """
 
 from decimal import Decimal
@@ -193,6 +194,12 @@ class Pedido(models.Model):
             'Estructura: [{"producto_id": 1, "nombre": "...", '
             '"cantidad": 2, "precio": "500.00"}]'
         )
+    )
+    # W17: idempotencia del correo de confirmación
+    correo_enviado = models.BooleanField(
+        default=False,
+        verbose_name='Correo de confirmación enviado',
+        help_text='True cuando se envió el correo de confirmación al cliente.'
     )
 
     class Meta:

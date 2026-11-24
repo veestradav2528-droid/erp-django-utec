@@ -147,6 +147,11 @@ class PagoExitosoTest(TestCase):
             total_pagado=Decimal('116.00')
         )
 
+        # Evita que .delay() intente conectarse a Redis durante los tests
+        patcher = patch('catalogo.views.enviar_confirmacion_pedido.delay')
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_pago_exitoso_devuelve_200(self):
         """GET /catalogo/pago-exitoso/<id>/ → 200."""
         r = self.client.get(

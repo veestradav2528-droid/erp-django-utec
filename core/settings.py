@@ -1,7 +1,7 @@
 # core/settings.py
 import environ
 from pathlib import Path
-
+import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ── Variables de entorno ──────────────────────────────────────────────────
@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_filters',              # ← nuevo (nombre de app es django_filters)
     'whitenoise.runserver_nostatic',
+    'anymail',                     # ← W17: correo con SendGrid
     # Apps del ERP
     'clientes',
     'proveedores',
@@ -41,6 +42,8 @@ INSTALLED_APPS = [
     'catalogo',                    # ← nuevo
     'core',
 ]
+
+
 
 
 
@@ -278,3 +281,42 @@ CELERY_TASK_DEFAULT_QUEUE = 'erp_django'
 # Se activa en tests con @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
 CELERY_TASK_ALWAYS_EAGER         = False
 CELERY_TASK_EAGER_PROPAGATES     = True
+
+# ── CORREO ELECTRÓNICO (W17: SendGrid vía django-anymail) ─────────────────
+# Desarrollo: backend de consola (imprime el correo en la terminal).
+# Producción: core/settings_prod.py cambia el backend a anymail/SendGrid.
+EMAIL_BACKEND = env(
+    'EMAIL_BACKEND',
+    default='django.core.mail.backends.console.EmailBackend'
+)
+
+# Remitente: debe ser el correo verificado como Sender en SendGrid
+DEFAULT_FROM_EMAIL = env(
+    'DEFAULT_FROM_EMAIL',
+    default='ERP Django <noreply@erp-django.com>'
+)
+
+EMAIL_SUBJECT_PREFIX = '[ERP Django] '
+
+# Administrador que recibe las alertas de stock (las tareas leen settings.ADMINS[0])
+ADMIN_EMAIL = env('ADMIN_EMAIL', default='admin@erp-django.com')
+ADMINS = [
+    ('Admin ERP', ADMIN_EMAIL),
+]
+
+# django-anymail (SendGrid)
+SENDGRID_API_KEY = env('SENDGRID_API_KEY', default='')
+ANYMAIL = {
+    'SENDGRID_API_KEY': SENDGRID_API_KEY,
+}
+
+# URL pública del sitio (la usan los enlaces de los correos de W17).
+# En Render sale sola de RENDER_EXTERNAL_URL; en local cae a localhost.
+SITE_URL = env(
+    'SITE_URL',
+    default=env('RENDER_EXTERNAL_URL', default='http://localhost:8000')
+).rstrip('/')
+
+# Ruta de la tienda a la que lleva el botón del correo de confirmación.
+# Cámbiala si tu catálogo vive en otra ruta (por ejemplo '/catalogo/').
+TIENDA_PATH = env('TIENDA_PATH', default='/')

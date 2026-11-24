@@ -60,6 +60,13 @@ SECURE_REFERRER_POLICY         = 'same-origin'
 # ── ARCHIVOS ESTÁTICOS ─────────────────────────────────────────────────────
 # WhiteNoise ya configurado en settings.py; solo confirmar almacenamiento
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+# ── CORREO ELECTRÓNICO (W17) ───────────────────────────────────────────────
+# En producción: enviar con SendGrid vía django-anymail.
+# SENDGRID_API_KEY, DEFAULT_FROM_EMAIL y ADMIN_EMAIL se leen en settings.py
+# (configúralas también en el dashboard de Render).
+EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
+
 # ── LOGGING: solo WARNING y superiores en producción ──────────────────────
 LOGGING = {
     'version': 1,

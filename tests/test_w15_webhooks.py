@@ -72,25 +72,29 @@ class WebhookSegurityTest(TestCase):
         mock_construct.side_effect = stripe.error.SignatureVerificationError(
             'Test error', 'sig_header'
         )
-        r = self.client.post(
-            reverse('catalogo:webhook'),
-            data=b'{"fake": "payload"}',
-            content_type='application/json',
-            HTTP_STRIPE_SIGNATURE='t=fake,v1=invalid'
-        )
+        with self.assertLogs(level='WARNING') as logs:
+            r = self.client.post(
+                reverse('catalogo:webhook'),
+                data=b'{"fake": "payload"}',
+                content_type='application/json',
+                HTTP_STRIPE_SIGNATURE='t=fake,v1=invalid'
+            )
         self.assertEqual(r.status_code, 400)
+        self.assertTrue(any('firma inv' in m for m in logs.output))
 
     @patch('catalogo.webhook_views.stripe.Webhook.construct_event')
     def test_payload_invalido_devuelve_400(self, mock_construct):
         """Payload malformado → 400 Bad Request."""
         mock_construct.side_effect = ValueError('JSON inválido')
-        r = self.client.post(
-            reverse('catalogo:webhook'),
-            data=b'no es json',
-            content_type='application/json',
-            HTTP_STRIPE_SIGNATURE='t=123,v1=abc'
-        )
+        with self.assertLogs(level='WARNING') as logs:
+            r = self.client.post(
+                reverse('catalogo:webhook'),
+                data=b'no es json',
+                content_type='application/json',
+                HTTP_STRIPE_SIGNATURE='t=123,v1=abc'
+            )
         self.assertEqual(r.status_code, 400)
+        self.assertTrue(any('payload inv' in m for m in logs.output))
 
 
 class WebhookPagoExitosoTest(TestCase):
@@ -106,6 +110,11 @@ class WebhookPagoExitosoTest(TestCase):
         self.pedido = _crear_pedido_con_snapshot(
             self.cli, self.prod, cantidad=2
         )
+
+        # Evita que .delay() intente conectarse a Redis durante los tests
+        patcher = patch('catalogo.webhook_views.enviar_confirmacion_pedido.delay')
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     @patch('catalogo.webhook_views.stripe.Webhook.construct_event')
     def test_payment_succeeded_actualiza_estado(self, mock_construct):
@@ -199,6 +208,11 @@ class WebhookStripeObjectTest(TestCase):
         )
         cli         = Cliente.objects.create(nombre='C', correo='c3@t.com')
         self.pedido = _crear_pedido_con_snapshot(cli, self.prod, cantidad=2)
+
+        # Evita que .delay() intente conectarse a Redis durante los tests
+        patcher = patch('catalogo.webhook_views.enviar_confirmacion_pedido.delay')
+        patcher.start()
+        self.addCleanup(patcher.stop)
 
     @patch('catalogo.webhook_views.stripe.Webhook.construct_event')
     def test_evento_stripe_object_real(self, mock_construct):

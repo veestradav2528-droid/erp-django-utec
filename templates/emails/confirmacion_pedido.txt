@@ -1,0 +1,17 @@
+{% autoescape off %}¡Pago confirmado! — {{ config.nombre_empresa }}
+
+Hola, {{ pedido.cliente.nombre }}:
+
+Tu pedido ha sido confirmado.
+
+PEDIDO: {{ pedido.numero_pedido }}
+TOTAL:  ${{ total|floatformat:2 }}
+FECHA:  {{ pedido.fecha_pedido|date:"d/m/Y H:i" }}
+
+{% for item in items %}- {{ item.nombre }}: {{ item.cantidad }} x ${{ item.precio|floatformat:2 }} = ${{ item.subtotal|floatformat:2 }}
+{% endfor %}
+Seguir comprando: {{ url_pedido }}
+
+Gracias por tu compra.
+{{ config.nombre_empresa }}
+{% endautoescape %}
