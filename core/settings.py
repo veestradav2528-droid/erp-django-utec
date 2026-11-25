@@ -1,7 +1,11 @@
 # core/settings.py
 import environ
-from pathlib import Path
 import os
+from datetime import timedelta
+from pathlib import Path
+
+from celery.schedules import crontab
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ── Variables de entorno ──────────────────────────────────────────────────
@@ -13,7 +17,6 @@ DEBUG       = env('DEBUG', default=True)
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['.onreader.com', 'localhost', '127.0.0.1'])
 
 # ── Apps instaladas ───────────────────────────────────────────────────────
-# core/settings.py — actualizar INSTALLED_APPS:
 INSTALLED_APPS = [
     'jazzmin',
     'django.contrib.admin',
@@ -44,9 +47,6 @@ INSTALLED_APPS = [
 ]
 
 
-
-
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -62,7 +62,6 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'core.urls'
 
 # ── Templates ─────────────────────────────────────────────────────────────
-# core/settings.py — actualizar TEMPLATES[0]['OPTIONS']['context_processors']:
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -111,7 +110,6 @@ LOGIN_REDIRECT_URL  = '/productos/'
 LOGOUT_REDIRECT_URL = '/'
 
 # ── DRF ──────────────────────────────────────────────────────────────────
-# core/settings.py — reemplazar la configuración REST_FRAMEWORK de W01:
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',   # para el navegador
@@ -125,13 +123,12 @@ REST_FRAMEWORK = {
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-# core/settings.py — agregar al final del archivo
-# core/settings.py — agregar al final (antes de JAZZMIN_SETTINGS):
 
 # ── STRIPE (Pasarela de pago) ──────────────────────────────────────────────
-STRIPE_SECRET_KEY     = env('STRIPE_SECRET_KEY',     default='sk_test_placeholder')
+STRIPE_SECRET_KEY      = env('STRIPE_SECRET_KEY',      default='sk_test_placeholder')
 STRIPE_PUBLISHABLE_KEY = env('STRIPE_PUBLISHABLE_KEY', default='pk_test_placeholder')
-STRIPE_WEBHOOK_SECRET = env('STRIPE_WEBHOOK_SECRET', default='whsec_placeholder')
+STRIPE_WEBHOOK_SECRET  = env('STRIPE_WEBHOOK_SECRET',  default='whsec_placeholder')
+
 # ── JAZZMIN — Personalización del admin con Fable 5 AzulERP ───────────────
 JAZZMIN_SETTINGS = {
     # Identidad
@@ -228,6 +225,7 @@ JAZZMIN_UI_TWEAKS = {
         'success':   'btn-success',
     },
 }
+
 # ── DJANGO SITES (requerido por allauth) ──────────────────────────────────
 SITE_ID = 1
 
@@ -246,11 +244,7 @@ ACCOUNT_EMAIL_VERIFICATION     = 'none'         # no enviar email de verificaci�
 ACCOUNT_LOGOUT_ON_GET          = True           # logout sin confirmar (dev)
 ACCOUNT_SESSION_REMEMBER       = True           # recordar sesión
 
-# LOGIN_URL y LOGIN_REDIRECT_URL ya definidos en W01:
-# LOGIN_URL           = '/accounts/login/'
-# LOGIN_REDIRECT_URL  = '/productos/'
 LOGOUT_REDIRECT_URL = '/'
-# core/settings.py — agregar al final (después de JAZZMIN_SETTINGS):
 
 # ── CELERY — Cola de tareas asíncronas ────────────────────────────────────
 # Broker: Redis almacena los mensajes de las tareas pendientes
@@ -283,11 +277,21 @@ CELERY_TASK_ALWAYS_EAGER         = False
 CELERY_TASK_EAGER_PROPAGATES     = True
 
 # ── CORREO ELECTRÓNICO (W17: SendGrid vía django-anymail) ─────────────────
-# Desarrollo: backend de consola (imprime el correo en la terminal).
-# Producción: core/settings_prod.py cambia el backend a anymail/SendGrid.
+# API key de SendGrid (viene del archivo .env, nunca se escribe aquí)
+SENDGRID_API_KEY = env('SENDGRID_API_KEY', default='')
+
+# Backend de correo:
+#   - Si hay SENDGRID_API_KEY en el .env  → correo REAL con SendGrid.
+#   - Si no hay API key                   → imprime el correo en la terminal.
+#   - Si defines EMAIL_BACKEND en el .env → se respeta lo que pongas.
+# (Los tests usan su propio backend en memoria, nunca envían correos reales.)
 EMAIL_BACKEND = env(
     'EMAIL_BACKEND',
-    default='django.core.mail.backends.console.EmailBackend'
+    default=(
+        'anymail.backends.sendgrid.EmailBackend'
+        if SENDGRID_API_KEY
+        else 'django.core.mail.backends.console.EmailBackend'
+    ),
 )
 
 # Remitente: debe ser el correo verificado como Sender en SendGrid
@@ -298,14 +302,18 @@ DEFAULT_FROM_EMAIL = env(
 
 EMAIL_SUBJECT_PREFIX = '[ERP Django] '
 
-# Administrador que recibe las alertas de stock (las tareas leen settings.ADMINS[0])
+# Administrador que recibe las alertas de stock y el reporte diario
+# (las tareas leen settings.ADMINS[0])
 ADMIN_EMAIL = env('ADMIN_EMAIL', default='admin@erp-django.com')
 ADMINS = [
     ('Admin ERP', ADMIN_EMAIL),
 ]
 
+# Token secreto para que un cron externo (cron-job.org) pueda disparar
+# el reporte diario sin Celery. Si está vacío, la vista rechaza todo.
+CRON_TOKEN = env('CRON_TOKEN', default='')
+
 # django-anymail (SendGrid)
-SENDGRID_API_KEY = env('SENDGRID_API_KEY', default='')
 ANYMAIL = {
     'SENDGRID_API_KEY': SENDGRID_API_KEY,
 }
@@ -320,3 +328,31 @@ SITE_URL = env(
 # Ruta de la tienda a la que lleva el botón del correo de confirmación.
 # Cámbiala si tu catálogo vive en otra ruta (por ejemplo '/catalogo/').
 TIENDA_PATH = env('TIENDA_PATH', default='/')
+
+# ── CELERY BEAT — Tareas programadas (W18) ────────────────────────────────
+CELERY_BEAT_SCHEDULE = {
+
+    # Verificar stock bajo cada hora
+    'verificar-stock-bajo-cada-hora': {
+        'task':     'ventas.verificar_stock_bajo',
+        'schedule': timedelta(hours=1),
+        'args':     (5,),   # umbral = 5 unidades
+        'options':  {'queue': 'erp_django'},
+    },
+
+    # Reporte de ventas diario (hora México, formato 24 h).
+    # La hora se cambia con REPORTE_HORA y REPORTE_MINUTO en el .env
+    # (o en Environment de Render). Si no existen: 8:00 AM.
+    'reporte-ventas-diario-8am': {
+        'task':     'ventas.reporte_ventas_diario',
+        'schedule': crontab(
+            hour=env.int('REPORTE_HORA', default=8),
+            minute=env.int('REPORTE_MINUTO', default=0),
+        ),
+        'options':  {'queue': 'erp_django'},
+    },
+
+}
+
+# Necesario para que Beat use la zona horaria de Django (no UTC)
+CELERY_BEAT_TIMEZONE = TIME_ZONE   # 'America/Mexico_City'
