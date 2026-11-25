@@ -14,7 +14,7 @@ environ.Env.read_env(BASE_DIR / '.env')
 
 SECRET_KEY  = env('SECRET_KEY', default='dev-key-insegura-solo-para-desarrollo')
 DEBUG       = env('DEBUG', default=True)
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['.onreader.com', 'localhost', '127.0.0.1'])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['.onrender.com', 'localhost', '127.0.0.1'])
 
 # ── Apps instaladas ───────────────────────────────────────────────────────
 INSTALLED_APPS = [
@@ -271,10 +271,15 @@ CELERY_TASK_TIME_LIMIT       = 360  # 6 minutos (hard limit)
 # Prefijo para las colas (útil si se comparte Redis entre proyectos)
 CELERY_TASK_DEFAULT_QUEUE = 'erp_django'
 
-# Para tests: ejecutar tareas sincrónicamente (sin worker)
-# Se activa en tests con @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
-CELERY_TASK_ALWAYS_EAGER         = False
-CELERY_TASK_EAGER_PROPAGATES     = True
+# Modo "eager": las tareas se ejecutan al instante dentro de la misma
+# página, sin worker ni Redis. Se controla con variables de entorno:
+#   - En local (con worker real): no pongas nada → queda en False.
+#   - En Render (sin worker):     CELERY_ALWAYS_EAGER=True en Environment.
+# EAGER_PROPAGATES=True hace que los errores (por ejemplo de SendGrid)
+# SÍ se vean en los Logs en vez de perderse en silencio.
+# En tests se sigue pudiendo usar @override_settings(CELERY_TASK_ALWAYS_EAGER=True)
+CELERY_TASK_ALWAYS_EAGER     = env.bool('CELERY_ALWAYS_EAGER', default=False)
+CELERY_TASK_EAGER_PROPAGATES = env.bool('CELERY_EAGER_PROPAGATES', default=True)
 
 # ── CORREO ELECTRÓNICO (W17: SendGrid vía django-anymail) ─────────────────
 # API key de SendGrid (viene del archivo .env, nunca se escribe aquí)
@@ -356,5 +361,3 @@ CELERY_BEAT_SCHEDULE = {
 
 # Necesario para que Beat use la zona horaria de Django (no UTC)
 CELERY_BEAT_TIMEZONE = TIME_ZONE   # 'America/Mexico_City'
-CELERY_TASK_ALWAYS_EAGER = True
-CELERY_TASK_EAGER_PROPAGATES = False
