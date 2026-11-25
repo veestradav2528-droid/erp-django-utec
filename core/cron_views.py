@@ -12,10 +12,6 @@ def enviar_reporte_diario(request):
     esperado = settings.CRON_TOKEN.encode()
     recibido = request.GET.get('token', '').encode()
 
-    # DEBUG temporal: borrar después de la prueba
-    print('ESPERADO:', repr(esperado))
-    print('RECIBIDO:', repr(recibido))
-
     # Sin token configurado o token incorrecto -> no hace nada
     if not esperado or not hmac.compare_digest(recibido, esperado):
         return JsonResponse({'error': 'no autorizado'}, status=403)
