@@ -1,0 +1,41 @@
+# Sprint 5 Retrospective — ERP Django
+## Semanas W16–W18 · Espiral 6: Celery e Integraciones
+
+**Fecha:** 24/11/2026
+
+## ¿Qué funcionó bien? (Keep)
+1. El campo `correo_enviado` en Pedido resolvió el problema de correos
+   duplicados sin necesidad de un sistema externo de idempotencia.
+2. `@override_settings(EMAIL_BACKEND=locmem)` hizo los tests de correo
+   triviales: `mail.outbox` captura todo sin enviar nada.
+3. Separar Beat y worker como procesos independientes es la
+   arquitectura correcta desde el inicio.
+4. Configurar el backend de correo automático según `SENDGRID_API_KEY`
+   permitió usar la consola en desarrollo y SendGrid real sin cambiar código.
+
+## ¿Qué mejorar? (Improve)
+1. Documentar mejor el procedimiento de arranque de los procesos
+   (Redis, Django, worker y Beat) y la activación del entorno en PowerShell
+   vs. CMD.
+2. Verificar al inicio de la sesión que Redis (Memurai) esté instalado y
+   encendido en la computadora que se vaya a usar.
+3. No mostrar llaves (API keys) en capturas; rotarlas si se exponen.
+
+## Acción de mejora (Kaizen) para Sprint 6
+> "En el Sprint 6 (Dashboard), pre-calcularé los KPIs con annotate
+>  desde el principio, sin iterar en Python."
+
+## Velocidad del Sprint 5
+
+| HU | Pts plan. | Pts ent. |
+|---|---|---|
+| HU-E6-01 Infraestructura Celery+Redis | 3 | 3 |
+| HU-E6-02 Tareas sin bloquear HTTP | 2 | 2 |
+| HU-E6-03 Correo confirmación post-pago | 5 | 5 |
+| HU-E6-04 Alerta stock bajo | 3 | 3 |
+| HU-E6-05 Reporte diario 8 AM | 3 | 3 |
+| HU-E6-06 Monitorear con Flower | 2 | 2 |
+| **Total** | **18** | **18** |
+
+**Velocidad Sprint 5:** 18 puntos
+**Velocidad acumulada (S0–S5):** 123 puntos
