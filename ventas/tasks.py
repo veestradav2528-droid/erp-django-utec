@@ -276,7 +276,7 @@ def _enviar_alerta_stock(productos_bajos: list, umbral: int) -> None:
         )
     except Exception as exc:
         logger.error(f'[stock_bajo] Error al enviar alerta: {exc}')
-        # ventas/tasks.py — agregar al final del archivo
+
 
 @shared_task(
     bind=True,
@@ -286,26 +286,27 @@ def _enviar_alerta_stock(productos_bajos: list, umbral: int) -> None:
 def reporte_ventas_diario(self) -> dict:
     """Genera y envía el reporte diario de ventas al administrador.
 
-    Se ejecuta automáticamente a las 8:00 AM todos los días
-    mediante Celery Beat (configurado en CELERY_BEAT_SCHEDULE).
+    Se ejecuta a la hora definida en REPORTE_HORA / REPORTE_MINUTO
+    (CELERY_BEAT_SCHEDULE en settings.py) o cuando lo dispara el cron
+    externo.
 
-    Cálculos realizados en SQL (no en Python) para máxima eficiencia:
-        - Total de pedidos pagados hoy
-        - Total facturado (suma de total_pagado)
-        - Top 5 productos por ingreso del día
+    Cálculos realizados:
+        - Total de pedidos pagados hoy (SQL)
+        - Total facturado: suma de total_pagado (SQL)
+        - Top 5 productos por ingreso del día, calculado desde el
+          items_snapshot de los pedidos pagados de hoy (los pedidos de la
+          tienda no crean DetalleVenta).
 
     Returns:
         dict con total_pedidos, total_facturado y top_productos.
     """
     from decimal import Decimal
 
-    from django.db.models import (
-        DecimalField, ExpressionWrapper, F, Sum,
-    )
+    from django.db.models import Sum
     from django.utils import timezone
 
     from configuracion.models import ConfiguracionERP   # import local
-    from ventas.models        import DetalleVenta, Pedido  # import local
+    from ventas.models        import Pedido             # import local
 
     hoy    = timezone.localdate()
     config = ConfiguracionERP.get_instance()
@@ -321,21 +322,26 @@ def reporte_ventas_diario(self) -> dict:
     )['total'] or Decimal('0.00')
 
     # ── 2. Top 5 productos por ingreso del día ─────────────────────────
-    top_productos = list(
-        DetalleVenta.objects
-        .filter(venta__fecha__date=hoy)
-        .values(nombre=F('producto__nombre'))
-        .annotate(
-            unidades=Sum('cantidad'),
-            ingreso=Sum(
-                ExpressionWrapper(
-                    F('cantidad') * F('precio_unitario'),
-                    output_field=DecimalField(max_digits=12, decimal_places=2)
-                )
+    # Se calcula con items_snapshot de los pedidos pagados de hoy.
+    acumulado = {}
+    for pedido in pedidos_hoy:
+        for it in _preparar_items(pedido.items_snapshot):
+            fila = acumulado.setdefault(
+                it['nombre'],
+                {
+                    'nombre':   it['nombre'],
+                    'unidades': 0,
+                    'ingreso':  Decimal('0.00'),
+                },
             )
-        )
-        .order_by('-ingreso')[:5]
-    )
+            fila['unidades'] += it['cantidad']
+            fila['ingreso']  += it['subtotal']
+
+    top_productos = sorted(
+        acumulado.values(),
+        key=lambda f: f['ingreso'],
+        reverse=True,
+    )[:5]
 
     logger.info(
         f'[reporte_diario] {hoy}: {total_pedidos} pedidos, '
@@ -353,7 +359,14 @@ def reporte_ventas_diario(self) -> dict:
         'fecha':           str(hoy),
         'total_pedidos':   total_pedidos,
         'total_facturado': str(total_facturado),
-        'top_productos':   top_productos,
+        'top_productos': [
+            {
+                'nombre':   p['nombre'],
+                'unidades': p['unidades'],
+                'ingreso':  str(p['ingreso']),
+            }
+            for p in top_productos
+        ],
     }
 
 
@@ -369,9 +382,7 @@ def _enviar_reporte_ventas(
         top_productos:   Lista de dicts con nombre, unidades, ingreso.
         config:          Instancia de ConfiguracionERP.
     """
-    url_admin = (
-        'https://erp-django-utec.onrender.com/admin/ventas/venta/'
-    )
+    url_admin = f'{_url_base()}/admin/ventas/venta/'
     fecha_str = fecha.strftime('%d/%m/%Y')
 
     contexto = {

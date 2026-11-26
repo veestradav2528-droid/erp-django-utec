@@ -19,5 +19,5 @@ Sin ventas registradas hoy.
 Panel de administración: {{ url_admin }}
 
 ───────────────────────────────────────────
-Generado automáticamente a las 8:00 AM
+Generado automáticamente por ERP Django
 ERP Django · {{ config.nombre_empresa }}

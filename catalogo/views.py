@@ -318,22 +318,22 @@ def pago_exitoso(request, pedido_id: int):
     """Vista de confirmación post-pago exitoso — W16.
 
     Cambios respecto a W14:
-        Dispara la tarea asíncrona de correo con .delay().
-        La tarea se encola en Redis y el worker la procesa
-        en segundo plano, sin bloquear esta respuesta HTTP.
+        Dispara la tarea de correo con .delay().
+        Con CELERY_ALWAYS_EAGER=True (Render sin worker) se ejecuta al
+        instante; con worker y Redis se encola y se procesa en segundo
+        plano, sin bloquear esta respuesta HTTP.
     """
     pedido = get_object_or_404(Pedido, pk=pedido_id)
 
     # Vaciar el carrito de la sesión
     _guardar_carrito(request, {})
 
-    # ── NUEVO W16: disparar tarea asíncrona de confirmación ───────────
-    # .delay() envía la tarea al broker Redis de forma no bloqueante.
-    # El worker la ejecutará en segundo plano.
-    
+    # ── W16: disparar tarea de confirmación ───────────────────────────
+    # Con CELERY_ALWAYS_EAGER=True (Render) se ejecuta al instante;
+    # con worker y Redis se encola y se procesa en segundo plano.
     # ──────────────────────────────────────────────────────────────────
     try:
-        enviar_confirmacion_pedido(pedido.pk)
+        enviar_confirmacion_pedido.delay(pedido.pk)
     except Exception as e:
         print(f"Error al enviar correo de confirmación: {e}")
 
